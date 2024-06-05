@@ -1,0 +1,3141 @@
+---
+title: "Entregable 2 del trabajo final pdf"
+author: "Alvaro Ortuzar"
+date: "2023-08-27"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+# Paso 1: Instalar y cargar los paquetes necesarios
+install.packages("readxl")
+install.packages("dplyr")
+library(readxl)
+library(dplyr)
+
+
+
+####### Primera entrega – Final de la semana 3 #######
+
+
+
+```{r}
+library(readxl)
+# Paso 2: Seleccionar el archivo Excel utilizando file.choose()
+archivo_excel <- file.choose()
+
+# Paso 3: Leer el archivo Excel y almacenar los datos en un objeto
+datos <- read_excel(archivo_excel)
+
+# Paso 4: Convertir las variables no numéricas a numéricas
+numeric_columns <- sapply(datos, is.numeric)
+datos[!numeric_columns] <- lapply(datos[!numeric_columns], as.numeric)
+
+# Paso 5: Cálculo de estadísticas descriptivas para todas las variables
+statistics <- data.frame(
+  Variable = names(datos),
+  Mean = sapply(datos, mean, na.rm = TRUE),
+  Median = sapply(datos, median, na.rm = TRUE),
+  Standard_Deviation = sapply(datos, sd, na.rm = TRUE),
+  Correlation = sapply(datos, function(x) cor(x, datos$Blocks, use = "pairwise.complete.obs"))
+)
+
+# Paso 6: Mostrar los resultados
+print(statistics)
+summary(datos)
+```
+
+
+
+#Grafica de estadisticos principales con variable singular (Blocks) tapones.
+
+
+```{r}
+# Cargar las librerías necesarias
+library(readxl)
+library(ggplot2)
+
+# Paso 2: Seleccionar el archivo Excel utilizando file.choose()
+archivo_excel <- file.choose()
+
+# Paso 3: Leer el archivo Excel y almacenar los datos en un objeto
+datos <- read_excel(archivo_excel)
+
+# Filtrar solo las variables numéricas excluyendo "Player ID" y "Team ID"
+numeric_columns <- sapply(datos, is.numeric)
+exclude_columns <- c("Player ID", "Team ID")
+numeric_columns <- numeric_columns & !names(datos) %in% exclude_columns
+datos_numeric <- datos[, numeric_columns]
+
+# Paso 4: Cálculo de estadísticas descriptivas para todas las variables numéricas
+statistics <- data.frame(
+  Variable = names(datos_numeric),
+  Mean = sapply(datos_numeric, mean, na.rm = TRUE),
+  Median = sapply(datos_numeric, median, na.rm = TRUE),
+  Standard_Deviation = sapply(datos_numeric, sd, na.rm = TRUE),
+  Correlation_with_Blocks = sapply(datos_numeric, function(x) cor(x, datos_numeric$Blocks, use = "pairwise.complete.obs"))
+)
+
+# Mostrar los resultados
+print(statistics)
+
+# Crear gráficos de barras para las estadísticas
+ggplot(statistics, aes(x = Variable, y = Mean, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Estadísticas Descriptivas - Variables",
+       x = "Variable", y = "Media") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggplot(statistics, aes(x = Variable, y = Standard_Deviation, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Estadísticas Descriptivas - Desviación Estándar",
+       x = "Variable", y = "Desviación Estándar") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+
+#Grafica de correlacion de variables respecto de los minutos jugados en cancha.
+
+
+```{r}
+# Cargar las librerías necesarias
+library(readxl)
+library(ggplot2)
+
+# Paso 2: Seleccionar el archivo Excel utilizando file.choose()
+archivo_excel <- file.choose()
+
+# Paso 3: Leer el archivo Excel y almacenar los datos en un objeto
+datos <- read_excel(archivo_excel)
+
+# Filtrar solo las variables numéricas excluyendo "Player ID" y "Team ID"
+numeric_columns <- sapply(datos, is.numeric)
+exclude_columns <- c("Player ID", "Team ID")
+numeric_columns <- numeric_columns & !names(datos) %in% exclude_columns
+datos_numeric <- datos[, numeric_columns]
+
+# Calcular la correlación de cada variable con "Minutes Played"
+correlation_with_minutes <- sapply(datos_numeric, function(x) cor(x, datos_numeric$`Minutes Played`, use = "pairwise.complete.obs"))
+
+# Crear un data frame para el gráfico
+correlation_data <- data.frame(Variable = names(correlation_with_minutes), Correlation = correlation_with_minutes)
+
+# Crear gráfico de barras para la correlación con "Minutes Played"
+ggplot(correlation_data, aes(x = Variable, y = Correlation, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Correlación con Minutes Played",
+       x = "Variable", y = "Correlación con Minutes Played") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+#Grafica de correlacion por pares de todas las variables.
+
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- datos %>%
+  select(where(is.numeric))
+
+# Calcular la matriz de correlación
+correlation_matrix <- cor(numeric_columns)
+
+# Crear un gráfico de correlación para cada par de variables
+correlation_plots <- list()
+for (i in 1:(ncol(correlation_matrix) - 1)) {
+  for (j in (i + 1):ncol(correlation_matrix)) {
+    var1 <- colnames(correlation_matrix)[i]
+    var2 <- colnames(correlation_matrix)[j]
+    plot <- ggplot(data = numeric_columns, aes(x = !!sym(var1), y = !!sym(var2))) +
+      geom_point(alpha = 0.6) +
+      labs(title = paste("Correlación entre", var1, "y", var2),
+           x = var1, y = var2) +
+      theme_minimal()
+    correlation_plots[[paste(var1, var2, sep = "_")]] <- plot
+  }
+}
+
+# Mostrar los gráficos de correlación
+for (plot_name in names(correlation_plots)) {
+  print(correlation_plots[[plot_name]])
+}
+
+```
+
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- datos %>%
+  select(where(is.numeric))
+
+# Calcular la matriz de correlación
+correlation_matrix <- cor(numeric_columns)
+
+# Crear una matriz de gráficos de barras para las correlaciones
+correlation_plots <- list()
+for (i in 1:(ncol(correlation_matrix) - 1)) {
+  for (j in (i + 1):ncol(correlation_matrix)) {
+    var1 <- colnames(correlation_matrix)[i]
+    var2 <- colnames(correlation_matrix)[j]
+    plot <- ggplot(data = numeric_columns, aes(x = !!sym(var1), y = !!sym(var2))) +
+      geom_bar(stat = "identity", fill = "skyblue") +
+      labs(title = paste("Correlación entre", var1, "y", var2),
+           x = var1, y = var2) +
+      theme_minimal()
+    correlation_plots[[paste(var1, var2, sep = "_")]] <- plot
+  }
+}
+
+# Mostrar los gráficos de correlación
+for (plot_name in names(correlation_plots)) {
+  print(correlation_plots[[plot_name]])
+}
+
+
+
+
+```
+
+
+# Paso 1: Instalar y cargar los paquetes necesarios
+install.packages("corrplot")
+install.packages("usdm")
+library(corrplot)
+library(usdm)
+library(readxl)
+
+```{r}
+library(readxl)
+#Paso : Mostrar mapa de calor de matriz de correlaciones
+
+
+# Paso 2: Seleccionar el archivo Excel utilizando file.choose()
+archivo_excel <- file.choose()
+
+# Paso 3: Leer el archivo Excel y almacenar los datos en un objeto
+datos <- read_excel(archivo_excel)
+
+# Paso 4: Convertir las variables no numéricas a numéricas
+numeric_columns <- sapply(datos, is.numeric)
+datos[!numeric_columns] <- lapply(datos[!numeric_columns], as.numeric)
+
+# Paso 5: Calcular la matriz de correlaciones
+cor_matrix <- cor(datos, use = "pairwise.complete.obs")
+
+# Paso 6: Mostrar el mapa de calor de la matriz de correlaciones con los números
+corrplot(cor_matrix, method = "number", type = "upper", tl.cex = 0.5, cl.cex = 0.5, number.cex = 0.4, number.digits = 2, addrect = 2)
+
+# Paso 7: Encontrar pares de variables con una correlación de 1
+perfect_collinearity <- usdm::findPerfectCollinearity(datos)
+
+# Paso 8: Obtener los nombres de las variables con multicolinealidad perfecta y su grado de multicolinealidad
+variables_with_perfect_collinearity <- colnames(perfect_collinearity)
+grado_multicolinealidad <- perfect_collinearity[variables_with_perfect_collinearity, variables_with_perfect_collinearity]
+
+# Paso 9: Mostrar las variables con multicolinealidad perfecta y su grado de multicolinealidad
+print(variables_with_perfect_collinearity)
+print(grado_multicolinealidad)
+```
+
+# Paso 1: Instalar y cargar el paquete "usdm"
+install.packages("usdm")
+library(usdm)
+library(readxl)
+
+
+```{r}
+library(readxl)
+##  Variables con multicolinealidad perfecta mediante el análisis de la matriz de correlaciones
+
+
+# Paso 1: Seleccionar el archivo Excel utilizando file.choose()
+archivo_excel <- file.choose()
+
+# Paso 2: Leer el archivo Excel y almacenar los datos en un objeto
+datos <- read_excel(archivo_excel)
+
+# Paso 3: Convertir las variables no numéricas a numéricas
+numeric_columns <- sapply(datos, is.numeric)
+datos[!numeric_columns] <- lapply(datos[!numeric_columns], as.numeric)
+
+# Paso 4: Calcular la matriz de correlaciones
+cor_matrix <- cor(datos, use = "pairwise.complete.obs")
+
+# Paso 5: Encontrar pares de variables con una correlación de 1
+perfect_collinearity <- which(abs(cor_matrix) == 1, arr.ind = TRUE)
+
+# Paso 6: Obtener los nombres de las variables con multicolinealidad perfecta
+variables_with_perfect_collinearity <- unique(colnames(cor_matrix)[perfect_collinearity[, 2]])
+
+# Paso 7: Mostrar las variables con multicolinealidad perfecta
+print(variables_with_perfect_collinearity)
+```
+
+
+###### Segunda entrega – Final de la semana 6 ######
+
+
+### Introducción ###
+
+En esta sección, realizaremos un análisis exploratorio de datos y visualizaremos las variables para obtener una visión general del conjunto de datos. Luego, aplicaremos diferentes técnicas de clustering y reducción de dimensiones para identificar patrones y grupos dentro de los datos. Finalmente, presentaremos los resultados y conclusiones obtenidos a partir del análisis.
+
+####a)Trazar y visualizar los datos####
+
+### Análisis exploratorio de datos y visualización ###
+
+En esta parte del código, generaremos gráficos de dispersión, histogramas y gráficos de barras para explorar la relación y distribución de las variables numéricas y categóricas.
+
+# Paso 1: Instalar y cargar el paquete ggplot2 para visualización de datos
+install.packages("ggplot2")
+library(ggplot2)
+library(stats)
+
+
+```{r}
+# Paso 2: Trazar un gráfico de dispersión para todas las variables
+for (col in colnames(datos)) {
+  if (is.numeric(datos[[col]])) {
+    scatter_plot <- ggplot(datos, aes(x = .data[[col]], y = .data[[col]])) +
+      geom_point() +
+      labs(x = col, y = "Valor", title = paste("Gráfico de dispersión -", col))
+    print(scatter_plot)
+  }
+}
+
+
+# Paso 3: Trazar un histograma para todas las variables
+for (col in colnames(datos)) {
+  if (is.numeric(datos[[col]])) {
+    histogram <- ggplot(datos, aes(x = datos[[col]])) +
+      geom_histogram(binwidth = 0.5, fill = "blue", color = "black") +
+      labs(x = col, y = "Frecuencia", title = paste("Histograma -", col))
+    print(histogram)
+  }
+}
+
+
+# Paso 4: Trazar un gráfico de barras para todas las variables categóricas
+for (col in colnames(datos)) {
+  if (!is.numeric(datos[[col]])) {
+    bar_plot <- ggplot(datos, aes(x = .data[[col]])) +
+      geom_bar() +
+      labs(x = col, y = "Frecuencia", title = paste("Gráfico de barras -", col))
+    print(bar_plot)
+  }
+}
+
+# Paso 5: Trazar un gráfico de líneas para todas las variables numéricas
+library(ggplot2)
+
+for (col in colnames(datos)) {
+  if (is.numeric(datos[[col]])) {
+    line_plot <- ggplot(datos, aes(x = `Minutes Played`, y = .data[[col]])) +
+      geom_line() +
+      labs(x = "Minutes Played", y = col, title = paste("Gráfico de líneas -", col))
+    print(line_plot)
+  }
+}
+```
+
+Interpretación potencial en relación a cada variable individual basada en los gráficos de dispersión:
+
+Rank: 
+
+Si hay un patrón discernible en el gráfico de dispersión para el rango de los jugadores, podría indicar una relación entre el rango y otra variable. Por ejemplo, si hay una tendencia clara de que los jugadores con un rango más alto tienen una puntuación más alta en alguna métrica, esto podría sugerir que los jugadores de mayor rango tienden a ser más destacados en ciertas áreas.
+
+Season Start Year: 
+
+Si hay fluctuaciones notables en función del año de inicio de la temporada en el gráfico de dispersión, podría indicar cambios a lo largo de los años en alguna métrica. Esto podría ser útil para analizar tendencias a lo largo del tiempo.
+
+Games Played y Minutes Played: 
+
+Si existe una relación en forma de línea recta entre estos y otras métricas, podría sugerir que a medida que un jugador juega más partidos o minutos, su desempeño en otras áreas también tiende a aumentar.
+
+FG Made, Three Point Field Goals Made, FT Made: 
+
+Estas métricas de tiro podrían tener correlaciones positivas con otras métricas de puntuación. Si hay un patrón lineal en los gráficos de dispersión, podría sugerir que los jugadores que tienen un alto porcentaje de tiros exitosos también tienden a tener un desempeño destacado en otras áreas.
+
+Rebounds, Assists, Steals, Blocks, Turnovers, Personal Fouls: 
+
+Para estas métricas de juego, los gráficos de dispersión podrían revelar patrones en la relación entre ellas y otras métricas. Por ejemplo, si los jugadores con más rebotes también tienden a tener más asistencias, esto podría indicar un estilo de juego multifacético.
+
+Efficency, AST/TOV, STL/TOV: 
+
+Los gráficos de dispersión para estas métricas relacionadas con la eficiencia y las relaciones de asistencias/turnovers podrían revelar tendencias en el rendimiento general de los jugadores. Por ejemplo, una mayor eficiencia podría correlacionarse con un mejor ratio de asistencias/turnovers.
+
+
+
+####OTROS####
+
+
+```{r}
+#Gráfico de barras agrupadas: Ideal para comparar diferentes categorías en una variable.
+
+bar_plot <- ggplot(datos, aes(x = `FG Made`, fill = `FG %`)) +
+  geom_bar(position = "dodge", stat = "count") +
+  labs(x = "FG Made", y = "Conteo", title = "Gráfico de barras agrupadas")
+print(bar_plot)
+
+
+
+#Gráfico de pastel: Útil para mostrar la proporción de diferentes categorías en un conjunto de datos.
+
+pie_plot <- ggplot(datos, aes(x = "", fill = `FG %`)) +
+  geom_bar(width = 1) +
+  coord_polar("y", start = 0) +
+  labs(fill = "FG %", title = "Gráfico de pastel")
+print(pie_plot)
+
+#Gráfico de área: Muestra la evolución de una variable a lo largo del tiempo, resaltando el área debajo de la curva.
+
+for (col in colnames(datos)) {
+  if (is.numeric(datos[[col]])) {
+    area_plot <- ggplot(datos, aes(x = datos[[col]], y = `FG %`)) +
+      geom_area() +
+      labs(x = col, y = "FG %", title = paste("Gráfico de área -", col))
+    print(area_plot)
+  }
+}
+
+#Gráfico de dispersión con líneas de tendencia: Muestra la relación entre dos variables y agrega una línea de tendencia para visualizar la dirección general de los datos.
+
+scatter_plot <- ggplot(datos, aes(x = .data[[col]], y = `FG %`)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x = col, y = "FG %", title = "Gráfico de dispersión con línea de tendencia")
+print(scatter_plot)
+
+
+#Gráfico de cajas y bigotes (boxplot): Proporciona una representación visual de la distribución y los valores atípicos de una variable.
+
+boxplot <- ggplot(datos, aes(x = .data[[col]], y = `FG %`)) +
+  geom_boxplot() +
+  labs(x = col, y = "FG %", title = "Gráfico de cajas y bigotes")
+print(boxplot)
+
+
+#Gráfico de violin: Combina un boxplot con una representación de la densidad de los datos, lo que permite visualizar tanto la distribución como la variabilidad.
+
+violin_plot <- ggplot(datos, aes(x = col, y = `FG %`)) +
+  geom_violin() +
+  labs(x = col, y = "FG %", title = "Gráfico de violin")
+print(violin_plot)
+
+
+#Gráfico de mapa de calor: Útil para mostrar la relación entre dos variables categóricas en una matriz, utilizando colores para indicar la fuerza de la relación.
+
+heatmap_plot <- ggplot(datos, aes(x = col, y = `FG %`, fill = `FG Made`)) +
+  geom_tile() +
+  labs(x = col, y = "FFG %", fill = "FG Made", title = "Gráfico de mapa de calor")
+print(heatmap_plot)
+
+```
+
+Interpretación en relación a cada variable específica que se presenta en los gráficos:
+
+FG Made y FG %: 
+
+El gráfico de barras agrupadas y el gráfico de pastel te muestran cómo se distribuyen los valores de FG Made en función de diferentes rangos de FG %. Si hay una tendencia de concentración de valores de FG Made en ciertos rangos de FG %, podría indicar una relación entre la efectividad de los tiros de campo y la cantidad de tiros realizados.
+
+Otras Variables Numéricas vs. FG %: 
+
+Los gráficos de área, dispersión con línea de tendencia, cajas y bigotes, y violín en relación con FG % podrían ayudarte a analizar cómo varían las otras variables numéricas con respecto a la eficacia en tiros de campo. Por ejemplo, si observas una tendencia ascendente o descendente en los gráficos de área o dispersión con línea de tendencia, podría indicar una correlación positiva o negativa entre estas variables y la efectividad en tiros de campo.
+
+FG % y Otras Variables Numéricas: 
+
+En los gráficos de área y dispersión con línea de tendencia que presentan FG % como la variable x, puedes ver cómo cambia la efectividad en tiros de campo en relación con otras variables numéricas. Si la línea de tendencia es ascendente o descendente, sugiere una relación entre la efectividad en tiros de campo y la variable numérica correspondiente.
+
+Variables Categóricas vs. FG Made: 
+
+Los gráficos de barras te permiten comparar cómo se distribuyen las categorías en diferentes valores de FG Made. Si una categoría específica tiende a estar asociada con valores más altos o más bajos de FG Made, podría indicar una relación entre esa categoría y la efectividad en tiros de campo.
+
+FG Made vs. FG %: 
+
+El gráfico de mapa de calor muestra cómo se distribuyen los valores de FG Made en función de los valores de FG %. Si hay un patrón visible en el mapa de calor, podría sugerir una relación entre la cantidad de tiros realizados (FG Made) y la eficacia (FG %).
+
+
+
+#Grafico de radar:
+
+
+Reemplazar "JugadorEjemplo" con el ID del jugador de baloncesto que deseas tener en el centro del gráfico de radar. (ej: Michael jordan 5º Anillo playoff liga 1997/1998) Player ID:893
+
+Gráfico de radar que compara los atributos de Michael Jordan (Player ID 893) en las categorías de "Rebounds", "Assists", "Steals" y "Blocks" con otros jugadores. 
+
+```{r}
+# Asegúrate de que los datos estén en forma de data frame
+datos <- as.data.frame(datos)
+
+# Cargar el paquete necesario
+if (!requireNamespace("fmsb", quietly = TRUE)) {
+  install.packages("fmsb")
+}
+library(fmsb)
+
+# Obtener los valores del jugador cuya variable es "Player ID"
+player_values <- datos[datos$`Player ID` == "893", c("Rebounds", "Assists", "Steals", "Blocks")]
+
+# Seleccionar las variables a graficar
+variables <- datos[, c("Rebounds", "Assists", "Steals", "Blocks")]
+
+# Crear el gráfico de radar para el jugador
+radarchart(player_values, axistype = 1, pcol = rgb(0.2, 0.5, 0.4, 0.5), 
+           plty = 1, pfcol = rgb(0.2, 0.5, 0.4, 0.2),
+           title = "Comparación de Atributos por Jugador de Baloncesto", maxmin = TRUE)
+
+# Agregar las líneas para los demás jugadores
+for (i in 1:nrow(variables)) {
+  lines(variables[i, ], col = rgb(0.5, 0.5, 0.5, 0.5))
+}
+
+```
+Rebounds (rebotes):
+
+Si la línea correspondiente a Michael Jordan está más lejos del centro en comparación con otras líneas, significa que su desempeño en rebotes es superior en relación con esos jugadores específicos. Si está más cerca del centro, su desempeño en rebotes podría ser relativamente inferior.
+
+Assists (asistencias): 
+
+De manera similar, la distancia de la línea de Michael Jordan desde el centro en la categoría de asistencias comparada con otras líneas indicará cómo se compara su habilidad de asistencia en relación con esos jugadores.
+
+Steals (robos): 
+
+Una línea más alejada en la categoría de robos indicaría que Michael Jordan tuvo un mejor rendimiento en robos en comparación con los otros jugadores.
+
+Blocks (bloqueos): 
+
+Si la línea correspondiente a Michael Jordan está más alejada en la categoría de bloqueos, eso señala que su capacidad de bloqueo era mejor en comparación con los otros jugadores en el gráfico.
+
+Patrones generales: 
+
+La forma de la figura resultante de las líneas para cada jugador puede revelar patrones interesantes. Por ejemplo, si una línea es más larga en "Rebounds" pero más corta en "Assists", podría indicar un jugador especializado en rebotes pero no tanto en distribuir asistencias.
+
+Relación general: 
+
+La relación entre las diferentes categorías también puede ser importante. Si una línea en particular se extiende más en todas las categorías, podría indicar un jugador excepcionalmente equilibrado en términos de atributos.
+
+Identificación de fortalezas y debilidades: 
+
+El gráfico puede ayudar a identificar las áreas en las que Michael Jordan se destacó en comparación con otros jugadores, así como las áreas en las que quizás no tuvo un rendimiento tan fuerte.
+
+
+#Grafico de radar:
+
+
+Gráfico de radar que compara los atributos de Michael Jordan (Player ID 893) en las categorías de "FT %", "FG %", "AST/TOV" y "STL/TOV" con otros jugadores. 
+
+```{r}
+# Asegúrate de que los datos estén en forma de data frame
+datos <- as.data.frame(datos)
+
+# Cargar el paquete necesario
+if (!requireNamespace("fmsb", quietly = TRUE)) {
+  install.packages("fmsb")
+}
+library(fmsb)
+
+# Obtener los valores del jugador cuya variable es "Player ID"
+player_values <- datos[datos$`Player ID` == "893", c("FT %", "FG %", "AST/TOV", "STL/TOV")]
+
+# Seleccionar las variables a graficar
+variables <- datos[, c("FT %", "FG %", "AST/TOV", "STL/TOV")]
+
+# Crear el gráfico de radar para el jugador
+radarchart(player_values, axistype = 0, pcol = rgb(0.2, 0.5, 0.4, 0.5), 
+           plty = 1, pfcol = rgb(0.2, 0.5, 0.4, 0.2),
+           title = "Comparación de Atributos por Jugador de Baloncesto", maxmin = TRUE,
+           vlabels = c("FT %", "FG %", "AST/TOV", "STL/TOV"), 
+           vlcex = 0.8, caxislabels = seq(0, 1, by = 0.2))
+
+# Agregar las líneas para los demás jugadores
+for (i in 1:nrow(variables)) {
+  lines(variables[i, ], col = rgb(0.5, 0.5, 0.5, 0.5))
+}
+
+```
+
+#Grafico de radar con todas las variables:
+
+
+```{r}
+# Asegúrate de que los datos estén en forma de data frame
+datos <- as.data.frame(datos)
+
+# Cargar el paquete necesario
+if (!requireNamespace("fmsb", quietly = TRUE)) {
+  install.packages("fmsb")
+}
+library(fmsb)
+
+# Obtener los valores del jugador cuya variable es "Player ID"
+player_values <- datos[datos$`Player ID` == "893", c("Rank", "Games Played", "Minutes Played", 
+                                                     "FG Made", "FG %", "Three Point Field Goals Made",
+                                                     "Three Point Field Goals Percentage", "FT Made",
+                                                     "FT %", "Rebounds", "Assists", "Steals", "Blocks",
+                                                     "Turnovers", "Personal Fouls", "Efficency", "AST/TOV", 
+                                                     "STL/TOV")]
+
+# Seleccionar las variables a graficar
+variables <- datos[, c("Rank", "Games Played", "Minutes Played", 
+                                                     "FG Made", "FG %", "Three Point Field Goals Made",
+                                                     "Three Point Field Goals Percentage", "FT Made",
+                                                     "FT %", "Rebounds", "Assists", "Steals", "Blocks",
+                                                     "Turnovers", "Personal Fouls", "Efficency", "AST/TOV", 
+                                                     "STL/TOV")]
+
+# Crear el gráfico de radar para el jugador
+radarchart(player_values, axistype = 1, pcol = rgb(0.2, 0.5, 0.4, 0.5), 
+           plty = 1, pfcol = rgb(0.2, 0.5, 0.4, 0.2),
+           title = "Comparación de Atributos por Jugador de Baloncesto", maxmin = TRUE)
+
+# Agregar las líneas para los demás jugadores
+for (i in 1:nrow(variables)) {
+  lines(variables[i, ], col = rgb(0.5, 0.5, 0.5, 0.5))
+}
+
+
+```
+
+T % (Porcentaje de Tiros Libres): 
+
+Si la línea correspondiente a Michael Jordan está más alejada del centro en comparación con otras líneas, significa que su porcentaje de tiros libres fue mejor en relación con esos jugadores específicos. Un área más grande bajo su línea indica un mejor porcentaje en comparación con otros.
+
+FG % (Porcentaje de Tiros de Campo): 
+
+Una línea más lejana del centro indica un mejor porcentaje de tiros de campo para Michael Jordan en comparación con los otros jugadores. Un área más grande bajo su línea indica un mejor porcentaje.
+
+AST/TOV (Relación de Asistencias a Pérdidas): 
+
+Si la línea correspondiente a Michael Jordan está más alejada del centro, indica que su relación de asistencias a pérdidas fue mejor en comparación con otros jugadores. Una línea más larga en esta categoría podría indicar una mayor habilidad para asistir y minimizar las pérdidas de balón.
+
+STL/TOV (Relación de Robos a Pérdidas): 
+
+Una línea más lejana en esta categoría indica que la relación de robos a pérdidas de Michael Jordan fue mejor en comparación con otros jugadores. Esto sugiere que tuvo la habilidad de robar el balón mientras minimizaba las pérdidas.
+
+Patrones Generales: 
+
+Al igual que antes, la forma de la figura formada por las líneas puede proporcionar patrones interesantes. Si una línea se extiende más en ciertas categorías pero menos en otras, esto podría sugerir fortalezas y debilidades específicas.
+
+Relación General: 
+
+Observar cómo las líneas se comparan en todas las categorías puede revelar la habilidad de Michael Jordan para mantener un equilibrio en diferentes aspectos del juego.
+
+
+#Ejemplo para temporada del 5º Anillo NBA 13-Julio-1997: Caso del pique entre 2 jugadores del Chicago Bulls que son Michael Jordan y Scottie Pippen. Analisis comparativo y conclusiones en relacion a declaraciones de los jugadores.
+
+
+# A) Player ID: 893 Michael Jordan.
+
+
+Comentarios Positivos de Michael Jordan sobre Scottie Pippen:
+
+
+•	Michael Jordan ha elogiado a Scottie Pippen como un gran compañero en la cancha, destacando su capacidad para trabajar en equipo y complementar su estilo de juego.
+•	Ha elogiado la habilidad defensiva excepcional de Pippen, reconociendo su capacidad para marcar a los jugadores oponentes y contribuir a la defensa del equipo.
+•	Jordan ha resaltado la versatilidad y el talento de Pippen como jugador, mencionando su capacidad para anotar, asistir y contribuir en varias áreas del juego.
+
+
+Comentarios Negativos de Michael Jordan sobre Scottie Pippen:
+
+
+•	En algunos casos, Jordan ha insinuado que Pippen podía ser egoísta en la cancha, sugiriendo que en ocasiones priorizaba sus estadísticas personales sobre el éxito del equipo.
+•	Ha señalado que Pippen tomaba malas decisiones en momentos cruciales del juego, lo que podía afectar el rendimiento general del equipo.
+•	Jordan también ha mencionado que Pippen tenía una tendencia a tomar tiros difíciles en situaciones clave, en lugar de confiar en sus compañeros de equipo.
+
+
+#Grafico de temporada regular con todas las variables y temporadas, grafico de playoffs: Descripcion general de juego basica.
+
+
+```{r}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Cargar el archivo Excel
+archivo_excel <- file.choose()
+datos <- read_excel(archivo_excel)
+
+# Ingresar el Player ID del jugador que deseas analizar
+player_id <- "893"
+
+# Filtrar las características numéricas del jugador específico
+player_features <- datos[datos$`Player ID` == player_id, ]
+
+# Convertir los datos en un formato adecuado para el gráfico
+player_features_long <- tidyr::gather(player_features, Variable, Valor, -`Player ID`, -`Team ID`)
+
+# Filtrar por variables de Temporada Regular y Playoffs
+regular_variables <- c("Rank", 
+                                                     "FG Made", "FG %", "Three Point Field Goals Made",
+                                                     "Three Point Field Goals Percentage", "FT Made",
+                                                     "FT %", "Rebounds", "Assists", "Steals", "Blocks"
+                                                     , "Personal Fouls", "Efficency", "AST/TOV", 
+                                                     "STL/TOV")
+playoffs_variables <- c("Rank", "Games Played", "Minutes Played", 
+                                                     "FG Made", "FG %", "Three Point Field Goals Made",
+                                                     "Three Point Field Goals Percentage", "FT Made",
+                                                     "FT %", "Rebounds", "Assists", "Steals", "Blocks",
+                                                      "Personal Fouls", "Efficency", "AST/TOV", 
+                                                     "STL/TOV")
+
+# Filtrar los datos por las variables de Temporada Regular y Playoffs
+regular_features <- player_features_long[player_features_long$Variable %in% regular_variables, ]
+playoffs_features <- player_features_long[player_features_long$Variable %in% playoffs_variables, ]
+
+# Crear gráfico de barras para Temporada Regular
+ggplot(regular_features, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, " - Temporada Regular"),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Crear gráfico de barras para Playoffs
+ggplot(playoffs_features, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, " - Playoffs"),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+#Player ID: 893 Michael Jordan.
+
+#Grafico de temporada regular y playoffs por jugador a elegir manualmente:
+
+
+```{r}
+# Cargar las librerías necesarias
+library(readxl)
+library(ggplot2)
+library(tidyr)
+
+# Cargar el archivo Excel
+archivo_excel <- file.choose()
+datos <- read_excel(archivo_excel)
+
+# Ingresar el Player ID del jugador que deseas analizar
+player_id <- "893"
+
+# Ingresar el año de inicio de la temporada que deseas analizar (!ojo al año introducido, ver temporadas de cada jugador¡)
+season_start_year <- 1997
+
+# Filtrar las características numéricas del jugador específico y el año de inicio de temporada específico
+player_features <- datos[datos$`Player ID` == player_id & datos$`Season Start Year` == season_start_year, ]
+
+# Filtrar por tipo de temporada: Regular y Playoffs
+regular_season_features <- player_features[player_features$`Season Type` == "Regular Season", ]
+playoffs_features <- player_features[player_features$`Season Type` == "Playoffs", ]
+
+# Convertir los datos en un formato adecuado para el gráfico
+regular_season_features_long <- tidyr::gather(regular_season_features, Variable, Valor, -`Player ID`, -`Team ID`, -`Season Start Year`, -`Season Type`)
+playoffs_features_long <- tidyr::gather(playoffs_features, Variable, Valor, -`Player ID`, -`Team ID`, -`Season Start Year`, -`Season Type`)
+
+# Crear gráfico de barras para la Temporada Regular
+ggplot(regular_season_features_long, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, "- Temporada Regular:", season_start_year),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Crear gráfico de barras para los Playoffs
+ggplot(playoffs_features_long, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, "- Playoffs:", season_start_year),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+# A) Player ID: 937 Scottie Pippen.
+
+
+
+Comentarios Positivos de Scottie Pippen sobre Michael Jordan:
+
+
+•	Scottie Pippen ha elogiado a Michael Jordan como uno de los jugadores más talentosos y exitosos en la historia de la NBA, reconociendo su habilidad para llevar a su equipo a la victoria.
+•	Ha destacado la ética de trabajo y la mentalidad competitiva de Jordan, señalando cómo su liderazgo inspiró a sus compañeros de equipo a esforzarse al máximo.
+•	Pippen ha mencionado que Jordan jugaba su mejor baloncesto en los momentos más importantes, lo que hacía que su equipo tuviera más posibilidades de ganar.
+
+
+Comentarios Negativos de Scottie Pippen sobre Michael Jordan:
+
+
+•	En su autobiografía, Pippen mencionó que Jordan podría ser exigente y duro con sus compañeros de equipo, lo que a veces podía generar conflictos en el vestuario.
+•	Pippen también ha señalado que el reconocimiento constante de Jordan como la figura central del equipo a veces dejaba en segundo plano la importancia de otros jugadores, incluido él mismo.
+•	Ha insinuado que Jordan podía ser egoísta en la cancha en algunas ocasiones, tomando tiros difíciles en lugar de involucrar a sus compañeros de equipo.
+
+
+#Grafico de temporada regular con todas las variables y temporadas, grafico de playoffs: Descripcion general de juego basica.
+
+
+```{r}
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Cargar el archivo Excel
+archivo_excel <- file.choose()
+datos <- read_excel(archivo_excel)
+
+# Ingresar el Player ID del jugador que deseas analizar
+player_id <- "937"
+
+# Filtrar las características numéricas del jugador específico
+player_features <- datos[datos$`Player ID` == player_id, ]
+
+# Convertir los datos en un formato adecuado para el gráfico
+player_features_long <- tidyr::gather(player_features, Variable, Valor, -`Player ID`, -`Team ID`)
+
+# Filtrar por variables de Temporada Regular y Playoffs
+regular_variables <- c("Rank", 
+                                                     "FG Made", "FG %", "Three Point Field Goals Made",
+                                                     "Three Point Field Goals Percentage", "FT Made",
+                                                     "FT %", "Rebounds", "Assists", "Steals", "Blocks"
+                                                     , "Personal Fouls", "Efficency", "AST/TOV", 
+                                                     "STL/TOV")
+playoffs_variables <- c("Rank", "Games Played", "Minutes Played", 
+                                                     "FG Made", "FG %", "Three Point Field Goals Made",
+                                                     "Three Point Field Goals Percentage", "FT Made",
+                                                     "FT %", "Rebounds", "Assists", "Steals", "Blocks",
+                                                      "Personal Fouls", "Efficency", "AST/TOV", 
+                                                     "STL/TOV")
+
+# Filtrar los datos por las variables de Temporada Regular y Playoffs
+regular_features <- player_features_long[player_features_long$Variable %in% regular_variables, ]
+playoffs_features <- player_features_long[player_features_long$Variable %in% playoffs_variables, ]
+
+# Crear gráfico de barras para Temporada Regular
+ggplot(regular_features, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, " - Temporada Regular"),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Crear gráfico de barras para Playoffs
+ggplot(playoffs_features, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, " - Playoffs"),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
+```{r}
+# Cargar las librerías necesarias
+library(readxl)
+library(ggplot2)
+library(tidyr)
+
+# Cargar el archivo Excel
+archivo_excel <- file.choose()
+datos <- read_excel(archivo_excel)
+
+# Ingresar el Player ID del jugador que deseas analizar
+player_id <- "937"
+
+# Ingresar el año de inicio de la temporada que deseas analizar (!ojo al año introducido, ver temporadas de cada jugador¡)
+season_start_year <- 1997
+
+# Filtrar las características numéricas del jugador específico y el año de inicio de temporada específico
+player_features <- datos[datos$`Player ID` == player_id & datos$`Season Start Year` == season_start_year, ]
+
+# Filtrar por tipo de temporada: Regular y Playoffs
+regular_season_features <- player_features[player_features$`Season Type` == "Regular Season", ]
+playoffs_features <- player_features[player_features$`Season Type` == "Playoffs", ]
+
+# Convertir los datos en un formato adecuado para el gráfico
+regular_season_features_long <- tidyr::gather(regular_season_features, Variable, Valor, -`Player ID`, -`Team ID`, -`Season Start Year`, -`Season Type`)
+playoffs_features_long <- tidyr::gather(playoffs_features, Variable, Valor, -`Player ID`, -`Team ID`, -`Season Start Year`, -`Season Type`)
+
+# Crear gráfico de barras para la Temporada Regular
+ggplot(regular_season_features_long, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, "- Temporada Regular:", season_start_year),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Crear gráfico de barras para los Playoffs
+ggplot(playoffs_features_long, aes(x = Variable, y = Valor, fill = Variable)) +
+  geom_bar(stat = "identity") +
+  labs(title = paste("Valores de Características para el Jugador:", player_id, "- Playoffs:", season_start_year),
+       x = "Variable", y = "Valor") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#Conclusiones generales:
+
+
+Basándonos en la información proporcionada y en los datos disponibles, podemos hacer una evaluación de la veracidad de los comentarios:
+
+
+Comentarios Positivos de Michael Jordan sobre Scottie Pippen:
+
+
+Elogio a la capacidad de trabajar en equipo: Verdadero. 
+
+Los datos respaldan la idea de que Pippen y Jordan formaron un equipo exitoso y se complementaron en la cancha.
+
+Habilidad defensiva excepcional: Verdadero. 
+
+Las estadísticas de Pippen muestran su habilidad defensiva sobresaliente, con múltiples robos y bloqueos a lo largo de su carrera.
+
+Versatilidad y talento: Verdadero. 
+
+Pippen era conocido por su versatilidad en puntos, asistencias, rebotes y defensa, lo cual es respaldado por sus estadísticas.
+
+
+Comentarios Negativos de Michael Jordan sobre Scottie Pippen:
+
+
+Egoísmo en la cancha: Falso. 
+
+Los datos no respaldan directamente esta afirmación. Pippen tenía un récord de asistencias significativo y jugaba un papel en el éxito del equipo.
+
+Tomar malas decisiones en momentos cruciales: Falso. 
+
+No hay datos concretos que respalden esta afirmación. Las decisiones en momentos cruciales son subjetivas y pueden variar.
+
+Tomar tiros difíciles en situaciones clave: Falso. 
+
+Pippen tenía un porcentaje de tiros de campo decente en su carrera, lo que indica que no necesariamente tomaba tiros difíciles de manera constante.
+
+
+Comentarios Positivos de Scottie Pippen sobre Michael Jordan:
+
+
+Talento y éxito de Jordan: Verdadero. 
+
+La reputación de Jordan como uno de los mejores jugadores de la historia de la NBA es respaldada por sus logros y estadísticas.
+
+Ética de trabajo y liderazgo: 
+
+Verdadero. La ética de trabajo y el liderazgo de Jordan son ampliamente reconocidos y se reflejan en sus logros y contribuciones al equipo.
+
+Jugar su mejor baloncesto en momentos importantes: Verdadero. 
+
+Jordan era famoso por su desempeño en momentos cruciales, lo cual se refleja en sus estadísticas en los playoffs.
+
+
+Comentarios Negativos de Scottie Pippen sobre Michael Jordan:
+
+
+Exigente y duro: Verdadero. 
+
+Varios testimonios respaldan la idea de que Jordan tenía altos estándares y podía ser duro con sus compañeros.
+
+Reconocimiento constante de Jordan: Verdadero. 
+
+La figura central de Jordan a veces podía opacar la contribución de otros jugadores en el equipo.
+
+Egoísmo en la cancha: Falso. 
+
+Los datos no respaldan directamente esta afirmación sobre Jordan. Su récord de asistencias y juego en equipo contradicen esta idea.
+
+
+En resumen, muchos de los comentarios negativos son subjetivos y pueden depender de la perspectiva personal. Los datos de juego y estadísticas proporcionan cierto respaldo, pero la dinámica del equipo y las interacciones personales también influyen en la interpretación de los comentarios.
+
+Sin embargo se pueden sacar las siguientes conclusiones. 
+
+Tanto Jordan como Pippen se elogian mutuamente y principalmente en situaciones limite de juego donde la aptitud y actitud del jugador es crucial, por ejemplo en finales, acciones dificiles, situacion de vestuario, manejo de roles de equipo, etc, claves para tener exito en playoffs con rivales cade vez mas dificiles. Es decir lo que se comenta el uno del otro es cierto en general viendo los datos.
+
+Pero a nivel de criticas, los reproches de Jordan hacia Pippen parecen ser mayores a todos los niveles y siendo todos falsos sin distincion que a diferencia de Pippen, que le hecha en cara que sea duro y acapare todas las camaras hiciese lo que hiciese, solapandole a un segundo papel de escudero. 
+
+Por otra parte, pippen le reprende en ser muy egoista en la cancha, lo cual contradice el nivel de asistencias de Jordan, siendo falsa la critica. Jordan pedia mucho aclarado en cancha para un 1 contra 1, pero en contrataques y juego rapido era muy complementario dando pases decisivos.
+
+
+
+#5.  Gráfico de densidad: 
+
+# Ejemplo de gráfico de densidad por clúster
+
+
+# Modo manual
+
+```{r}
+library(ggplot2)
+
+# Variable específica para la que deseas generar el gráfico de densidad
+variable_name <- "FG %"
+
+# Crear una lista para almacenar el gráfico de densidad
+density_plot <- list()
+
+# Generar el gráfico de densidad para la variable específica
+plot <- ggplot(datos, aes(x = .data[[variable_name]], fill = factor(`Season Type`))) +
+  geom_density(alpha = 0.5) +
+  labs(x = variable_name, y = "Densidad", fill = "Tipo de Temporada")
+
+density_plot[[variable_name]] <- plot
+
+# Mostrar el gráfico de densidad
+print(density_plot[[variable_name]])
+
+```
+El código proporciona un gráfico de densidad para una variable específica ("FG %") en función del tipo de temporada ("Season Type"), que parece estar etiquetado como "Regular Season" (Liga Regular) y "Playoffs" (Partidos de Playoffs). A partir de este gráfico, se pueden extraer las siguientes conclusiones sobre cómo se distribuye la variable "FG %" en estas dos categorías:
+
+Forma de la Distribución: 
+
+La forma de las curvas de densidad puede proporcionar información sobre la distribución de la variable "FG %" en las temporadas regulares y los playoffs. Si las curvas son similares, podría indicar que la distribución de los porcentajes de tiros de campo es consistente en ambas temporadas. Si hay diferencias notables en la forma, podría sugerir que el rendimiento de los jugadores en términos de tiros de campo es diferente en las dos situaciones.
+
+Centro de la Distribución: 
+
+Observar el pico de las curvas puede dar una idea de dónde se encuentra el valor más común para el porcentaje de tiros de campo en ambas temporadas. Si los picos están cerca uno del otro, podría indicar que el rendimiento promedio es similar. Si hay una diferencia, sugiere una variación en el rendimiento.
+
+Extremos de la Distribución: 
+
+Prestar atención a las colas de las curvas puede indicar cómo se distribuyen los valores extremos de los porcentajes de tiros de campo en ambas temporadas. Si una temporada tiene una cola más larga, podría indicar una mayor variabilidad en ese aspecto.
+
+Solapamiento: 
+
+Observar el grado de solapamiento entre las curvas puede ayudar a comprender cómo se superponen las distribuciones. Un mayor solapamiento sugiere que las distribuciones de FG % en ambas temporadas son similares, mientras que un menor solapamiento indica diferencias notables.
+
+Inferencias Específicas: 
+
+Dependiendo de la forma y la posición relativa de las curvas, se pueden hacer inferencias específicas sobre cómo se comporta la variable "FG %" en las temporadas regulares y los playoffs. Por ejemplo, si la curva de densidad de los playoffs está desplazada hacia la derecha en comparación con la de la liga regular, podría indicar que los jugadores tienen un mejor porcentaje de tiros de campo en los playoffs.
+
+
+
+# Modo automatico
+
+
+```{r}
+library(ggplot2)
+
+# Seleccionar solo las columnas numéricas
+numeric_columns <- datos[, sapply(datos, is.numeric)]
+
+# Crear una lista para almacenar los gráficos
+density_plots <- list()
+
+# Iterar a través de las columnas numéricas y crear los gráficos de densidad
+for (col in colnames(numeric_columns)) {
+  plot <- ggplot(datos, aes(x = .data[[col]], fill = factor(`Season Type`))) +
+    geom_density(alpha = 0.5) +
+    labs(x = col, y = "Densidad", fill = "Tipo de Temporada")
+  
+  density_plots[[col]] <- plot
+}
+
+# Mostrar los gráficos de densidad
+for (col in colnames(numeric_columns)) {
+  print(density_plots[[col]])
+}
+
+```
+Games Played (Partidos Jugados): 
+
+Si las curvas de densidad para la liga regular y los playoffs se superponen significativamente, podría sugerir que la distribución de los partidos jugados es similar en ambas temporadas. Si hay diferencias en las formas de las curvas, podría indicar variabilidad en la cantidad de partidos jugados en diferentes temporadas.
+
+Minutes Played (Minutos Jugados): 
+
+Observar las curvas de densidad para los minutos jugados en diferentes temporadas podría proporcionar información sobre cómo se distribuye el tiempo de juego en la liga regular y los playoffs. Si las curvas son similares, podría indicar consistencia en los minutos jugados. Si hay diferencias notables, podría sugerir patrones de tiempo de juego distintos.
+
+FG Made (Tiros de Campo Anotados): 
+
+Al analizar las curvas de densidad de los tiros de campo anotados, podrías inferir cómo se distribuyen los valores en las temporadas regulares y de playoffs. Si las curvas se superponen, podría indicar consistencia en la cantidad de tiros de campo anotados en ambas temporadas. Las diferencias en las formas podrían indicar variabilidad en el rendimiento.
+
+FG % (Porcentaje de Tiros de Campo Anotados):
+
+Observar las curvas de densidad para el porcentaje de tiros de campo anotados podría mostrar cómo se distribuye esta métrica en las dos temporadas. Si las curvas se superponen, podría indicar que el porcentaje de tiros de campo anotados es consistente. Si hay diferencias en las formas, podría sugerir variabilidad en el rendimiento de tiro.
+
+Three Point Field Goals Made (Tiros de 3 Anotados): 
+
+Las curvas de densidad para los tiros de tres anotados podrían revelar cómo se distribuyen los valores en las temporadas regulares y de playoffs. Si las curvas se superponen, podría indicar una cantidad similar de tiros de tres anotados en ambas temporadas. Diferencias en las formas podrían indicar variaciones en el rendimiento.
+
+Three Point Field Goals Percentage (Porcentaje de Tiros de 3 Anotados): 
+
+Observar las curvas de densidad para el porcentaje de tiros de tres anotados podría mostrar cómo se distribuye esta métrica en las dos temporadas. Si las curvas se superponen, podría indicar que el porcentaje de tiros de tres anotados es consistente. Diferencias en las formas podrían sugerir variabilidad en el rendimiento de tiros de tres.
+
+FT Made (Tiros Libres Anotados): 
+
+Las curvas de densidad para los tiros libres anotados podrían mostrar cómo se distribuyen los valores en las temporadas regulares y de playoffs. Si las curvas se superponen, podría indicar una cantidad similar de tiros libres anotados en ambas temporadas. Diferencias en las formas podrían indicar variaciones en el rendimiento.
+
+FT % (Porcentaje de Tiros Libres Anotados): 
+
+Observar las curvas de densidad para el porcentaje de tiros libres anotados podría mostrar cómo se distribuye esta métrica en las dos temporadas. Si las curvas se superponen, podría indicar que el porcentaje de tiros libres anotados es consistente. Diferencias en las formas podrían sugerir variabilidad en el rendimiento de tiros libres.
+
+Rebounds (Rebotes): 
+
+Analizar las curvas de densidad para los rebotes podría proporcionar información sobre cómo se distribuye esta estadística en las temporadas regulares y de playoffs. Si las curvas se superponen, podría indicar consistencia en la cantidad de rebotes en ambas temporadas. Diferencias en las formas podrían indicar variabilidad en el rendimiento en términos de rebotes.
+
+Assists (Asistencias): 
+
+Observar las curvas de densidad para las asistencias podría mostrar cómo se distribuyen las asistencias en las dos temporadas. Si las curvas se superponen, podría indicar una cantidad similar de asistencias en ambas
+
+
+
+```{r}
+
+#!Introducir año o temporada de juego de forma manual en console.¡. Por ejemplo "1997".
+
+library(ggplot2)
+
+# Seleccionar solo las columnas numéricas
+numeric_columns <- datos[, sapply(datos, is.numeric)]
+
+# Función interactiva para ingresar el año manualmente
+input_year <- as.integer(readline("Ingresa el año de inicio de temporada: "))
+
+# Filtrar los datos según el año ingresado
+filtered_data <- datos[datos$`Season Start Year` == input_year, ]
+
+# Crear una lista para almacenar los gráficos
+density_plots <- list()
+
+# Iterar a través de las columnas numéricas y crear los gráficos de densidad
+for (col in colnames(numeric_columns)) {
+  plot <- ggplot(filtered_data, aes(x = .data[[col]], fill = factor(`Season Type`))) +
+    geom_density(alpha = 0.5) +
+    labs(x = col, y = "Densidad", fill = "Tipo de Temporada y Año")
+  
+  density_plots[[col]] <- plot
+}
+
+# Mostrar los gráficos de densidad
+for (col in colnames(numeric_columns)) {
+  print(density_plots[[col]])
+}
+
+```
+
+
+```{r}
+library(ggplot2)
+
+# Seleccionar solo las columnas numéricas
+numeric_columns <- datos[, sapply(datos, is.numeric)]
+
+# Crear una lista para almacenar los gráficos
+density_plots <- list()
+
+# Iterar a través de las columnas numéricas y crear los gráficos de densidad
+for (col in colnames(numeric_columns)) {
+  plot <- ggplot(datos, aes(x = .data[[col]], fill = factor(`Season Start Year`))) +
+    geom_density(alpha = 0.5) +
+    labs(x = col, y = "Densidad", fill = "Año de Inicio de Temporada")
+  
+  density_plots[[col]] <- plot
+}
+
+# Mostrar los gráficos de densidad
+for (col in colnames(numeric_columns)) {
+  print(density_plots[[col]])
+}
+
+```
+
+El código genera gráficos de densidad para cada columna numérica en función del año de inicio de la temporada ("Season Start Year"). Cada gráfico de densidad muestra cómo se distribuyen los valores numéricos a lo largo de diferentes años de inicio de temporada. A continuación, se detallan las conclusiones que se pueden extraer al analizar estos gráficos de densidad en relación con cada variable numérica:
+
+Games Played (Partidos Jugados): 
+
+Observar las curvas de densidad para los partidos jugados en diferentes años de inicio de temporada podría proporcionar información sobre cómo se distribuye la cantidad de partidos a lo largo de los años. Si las curvas se superponen, podría indicar una distribución similar en la cantidad de partidos jugados en diferentes años. Si hay diferencias en las formas de las curvas, podría sugerir variabilidad en la cantidad de partidos.
+
+Minutes Played (Minutos Jugados): 
+
+Analizar las curvas de densidad para los minutos jugados en diferentes años de inicio de temporada podría mostrar cómo se distribuye el tiempo de juego en los diferentes años. Si las curvas se superponen, podría indicar que el tiempo de juego es consistente a lo largo de los años. Si hay diferencias notables en las formas, podría sugerir patrones cambiantes de tiempo de juego.
+
+FG Made (Tiros de Campo Anotados): 
+
+Observar las curvas de densidad para los tiros de campo anotados en diferentes años de inicio de temporada podría proporcionar información sobre cómo se distribuyen estos valores. Si las curvas se superponen, podría indicar que la cantidad de tiros de campo anotados es consistente a lo largo de los años. Diferencias en las formas podrían indicar variaciones en el rendimiento de tiro.
+
+FG % (Porcentaje de Tiros de Campo Anotados): 
+
+Analizar las curvas de densidad para el porcentaje de tiros de campo anotados en diferentes años de inicio de temporada podría mostrar cómo se distribuye esta métrica. Si las curvas se superponen, podría indicar que el porcentaje de tiros de campo anotados es similar en diferentes años. Diferencias en las formas podrían indicar variabilidad en el rendimiento de tiro.
+
+Three Point Field Goals Made (Tiros de 3 Anotados): 
+
+Observar las curvas de densidad para los tiros de tres anotados en diferentes años de inicio de temporada podría proporcionar información sobre cómo se distribuyen estos valores. Si las curvas se superponen, podría indicar que la cantidad de tiros de tres anotados es consistente en diferentes años. Diferencias en las formas podrían indicar variaciones en el rendimiento.
+
+Three Point Field Goals Percentage (Porcentaje de Tiros de 3 Anotados): 
+
+Analizar las curvas de densidad para el porcentaje de tiros de tres anotados en diferentes años de inicio de temporada podría mostrar cómo se distribuye esta métrica. Si las curvas se superponen, podría indicar que el porcentaje de tiros de tres anotados es similar en diferentes años. Diferencias en las formas podrían indicar variabilidad en el rendimiento de tiros de tres.
+
+FT Made (Tiros Libres Anotados): 
+
+Observar las curvas de densidad para los tiros libres anotados en diferentes años de inicio de temporada podría proporcionar información sobre cómo se distribuyen estos valores. Si las curvas se superponen, podría indicar que la cantidad de tiros libres anotados es consistente en diferentes años. Diferencias en las formas podrían indicar variaciones en el rendimiento.
+
+FT % (Porcentaje de Tiros Libres Anotados): 
+
+Analizar las curvas de densidad para el porcentaje de tiros libres anotados en diferentes años de inicio de temporada podría mostrar cómo se distribuye esta métrica. Si las curvas se superponen, podría indicar que el porcentaje de tiros libres anotados es similar en diferentes años. Diferencias en las formas podrían indicar variabilidad en el rendimiento de tiros libres.
+
+Rebounds (Rebotes): 
+
+Observar las curvas de densidad para los rebotes en diferentes años de inicio de temporada podría proporcionar información sobre cómo se distribuyen estos valores. Si las curvas se superponen, podría indicar que la cantidad de rebotes es similar en diferentes años. Diferencias en las formas podrían indicar variabilidad en el rendimiento en términos de rebotes.
+
+Assists (Asistencias): 
+
+Analizar las curvas de densidad para las asistencias en diferentes años de inicio.
+
+
+
+
+#####b)Resultados de modelos relevantes de clusterización o reducción de dimensiones#####
+#*nota: no hay reduccion de dimension por problemas con los datos en clusters.
+
+
+### Resultados de clustering con K-means ###
+
+
+#Aquí aplicaremos el algoritmo K-means para agrupar los datos en k clústeres. Mostraremos los resultados mediante un gráfico de dispersión con los centroides de cada clúster resaltados.
+
+
+```{r}
+###Kmeans:
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c('Games Played', 'Three Point Field Goals Made')]
+
+# Paso 3: Especificar el número de clusters deseado
+num_clusters <- 5
+
+# Paso 4: Aplicar K-means
+kmeans_model <- kmeans(variables_clustering, centers = num_clusters)
+
+# Paso 5: Obtener los resultados
+# Centroides de los clusters
+centroids <- kmeans_model$centers
+
+# Asignación de puntos a los clusters
+cluster_assignment <- kmeans_model$cluster
+
+# Paso 6: Visualizar los resultados
+plot(variables_clustering, col = cluster_assignment, pch = 19,
+     main = 'Resultados de Clustering (K-means)', xlab = 'Games Played', ylab = 'Three Point Field Goals Made')
+points(centroids, col = 1:max(cluster_assignment), pch = 3, cex = 2)
+```
+```{r}
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables numéricas para el clustering
+variables_clustering <- datos[, sapply(datos, is.numeric)]
+
+# Paso 3: Especificar el número de clusters deseado
+num_clusters <- 5
+
+# Paso 4: Aplicar K-means
+kmeans_model <- kmeans(variables_clustering, centers = num_clusters)
+
+# Paso 5: Obtener los resultados
+# Asignación de puntos a los clusters
+cluster_assignment <- kmeans_model$cluster
+
+# Paso 6: Visualizar los resultados
+pairs(variables_clustering, col = cluster_assignment,
+      pch = 19, main = 'Resultados de Clustering (K-means)')
+
+
+```
+
+```{r}
+# Cargar librerías
+library(cluster)
+
+# Seleccionar solo las variables numéricas para el clustering
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Verificar y tratar valores faltantes
+complete_cases <- complete.cases(numeric_data)
+numeric_data <- numeric_data[complete_cases, ]
+
+# Paso 6: Especificar el número de clusters deseado
+num_clusters <- 5
+
+# Paso 7: Aplicar K-means
+kmeans_model <- kmeans(numeric_data, centers = num_clusters)
+
+# Asignación de puntos a los clusters
+cluster_assignment <- kmeans_model$cluster
+
+# Crear un gráfico de dispersión de pares de variables con colores de acuerdo a los clusters
+pairs(numeric_data, col = cluster_assignment,
+      pch = 19, main = 'Resultados de Clustering (K-means)')
+
+
+
+
+```
+
+
+###Agrupamiento Jerárquico:
+
+### Resultados de clustering jerárquico ###
+
+#En esta sección, realizaremos un agrupamiento jerárquico utilizando el método de dendrogramas. Ajustaremos el tamaño del gráfico para obtener una visualización más clara de los clústeres.
+
+
+```{r}
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c('FG %', 'FG Made')]
+
+# Paso 3: Realizar el agrupamiento jerárquico
+hierarchical_model <- hclust(dist(variables_clustering))
+
+# Paso 4: Visualizar los resultados y Ajustar el tamaño del gráfico (dendograma ajustable)
+plot(hierarchical_model, main = "Agrupamiento Jerárquico")
+plot(hierarchical_model, main = "Agrupamiento Jerárquico", cex = 0.1)
+
+#Paso 4 Bis: Visualizar los resultados y ajustar el tamaño del grafico interactivo
+
+```
+
+# Instalar y cargar la biblioteca dendextend
+install.packages("dendextend")
+library(dendextend)
+
+
+```{r}
+# Paso 1: Preparar los datos y realizar el agrupamiento jerárquico
+variables_clustering <- datos[, c('FG %', 'FG Made')]
+hierarchical_model <- hclust(dist(variables_clustering))
+
+# Paso 2: Crear el dendrograma interactivo
+dend <- as.dendrogram(hierarchical_model)
+dend_interactive <- dend %>% set("labels_cex", 0.01) %>% hang.dendrogram()
+
+# Paso 3: Visualizar el dendrograma interactivo
+plot(dend_interactive, main = "Agrupamiento Jerárquico Interactivo")
+
+```
+
+
+### Resultados de DBSCAN ###
+
+#Aplicaremos el algoritmo DBSCAN con diferentes valores de epsilon (eps) y puntos mínimos (minPts) para identificar clústeres de densidad en los datos.
+
+
+```{r}
+###DBSCAN:
+
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c('FG %', 'FG Made')]
+
+# Paso 3: Aplicar DBSCAN con diferentes valores de eps y minPts
+library(dbscan)
+
+# Prueba con diferentes valores de eps y minPts
+eps_values <- c(10, 20, 30)
+minPts_values <- c(3, 5, 10)
+
+# Realizar el clustering con diferentes combinaciones de eps y minPts
+for (eps in eps_values) {
+  for (minPts in minPts_values) {
+    dbscan_model <- dbscan(variables_clustering, eps = eps, minPts = minPts)
+    
+    # Obtener los resultados
+    cluster_labels <- dbscan_model$cluster
+    
+    # Visualizar los resultados
+    plot(variables_clustering, col = cluster_labels, pch = 19,
+         main = paste("DBSCAN (eps =", eps, ", minPts =", minPts, ")"),
+         xlab = 'FG Attempts', ylab = 'FG Made')
+  }
+}
+```
+
+El código está aplicando el algoritmo de clustering DBSCAN a un conjunto de datos llamado 'datos'. Este algoritmo busca agrupar los datos en grupos (clusters) en función de su proximidad espacial. Aquí hay algunas conclusiones que se pueden obtener al analizar este código y sus resultados:
+
+Selección de Variables para Clustering: 
+
+En este caso, se están utilizando dos variables, "FG %" y "FG Made", para realizar el clustering. Estas variables parecen estar relacionadas con los tiros de campo anotados y su porcentaje de aciertos. La elección de estas variables para el clustering podría estar destinada a agrupar a los jugadores basados en su rendimiento en tiros de campo.
+
+Parámetros de DBSCAN (eps y minPts): 
+
+El algoritmo DBSCAN depende de dos parámetros clave: "eps" (epsilon) y "minPts" (puntos mínimos). "eps" define la distancia máxima entre dos puntos para considerarlos vecinos, y "minPts" define el número mínimo de puntos vecinos requeridos para formar un cluster. En este código, se están probando diferentes combinaciones de valores para estos parámetros (variando "eps" entre 10, 20 y 30, y "minPts" entre 3, 5 y 10).
+
+Resultados y Visualización: 
+
+Para cada combinación de valores de "eps" y "minPts", se ejecuta el algoritmo DBSCAN y se obtienen las etiquetas de cluster resultantes. Luego, se visualizan los datos en un gráfico de dispersión, donde los puntos están coloreados según la asignación de cluster. Cada combinación de parámetros genera un gráfico, y el título del gráfico indica los valores de "eps" y "minPts" utilizados en ese caso específico.
+
+Interpretación: 
+
+Al observar los resultados visuales, puedes inferir cómo los diferentes valores de "eps" y "minPts" afectan la formación de clusters. Puedes identificar cuántos y qué tipos de clusters se forman en función de estos parámetros. Un "eps" más grande podría resultar en clusters más grandes, mientras que un "eps" más pequeño podría generar clusters más pequeños y dispersos. Un "minPts" más grande requerirá un número mayor de puntos vecinos para formar un cluster.
+
+Evaluación: 
+
+La elección de los valores óptimos para "eps" y "minPts" es crucial en DBSCAN. Para evaluar las combinaciones de parámetros, puedes observar la coherencia de los clusters, su tamaño y su distribución. También se pueden usar métricas internas de evaluación, como la densidad media de los clusters, para determinar cuál combinación de parámetros genera clusters más significativos y coherentes.
+
+En resumen, este código te permite aplicar DBSCAN a las variables "FG %" y "FG Made" en función de diferentes combinaciones de valores de "eps" y "minPts". La visualización de los resultados te ayudará a comprender cómo los valores de estos parámetros influyen en la formación de clusters y cómo los jugadores se agrupan en función de su rendimiento en tiros de campo.
+
+
+### Resultados de Mean Shift ###
+
+#Realizaremos el agrupamiento Mean Shift y visualizaremos los resultados mediante un gráfico de dispersión con colores distintos para cada grupo.  
+
+```{r}
+### Mean Shift:
+
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c('Three Point Field Goals Made', 'Three Point Field Goals Percentage')]
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Paso 4: Visualizar los resultados y Ajustar el tamaño del gráfico
+plot(variables_clustering, col = kmeans_result$cluster, pch = 16, cex = 0.1,
+     main = "Agrupamiento K-Means")
+
+```
+
+```{r}
+# Cargar librerías
+library(cluster)
+library(ggplot2)
+library(dplyr)
+
+# Seleccionar solo las variables numéricas para el clustering
+datos_numericos <- datos %>%
+  select(-c(`Season Type`))
+
+# Realizar clustering con K-Means
+modelo_kmeans <- kmeans(datos_numericos, centers = 3)
+
+# Agregar resultados del clustering al conjunto de datos
+datos_con_clusters <- cbind(datos, Cluster = modelo_kmeans$cluster)
+
+# Crear gráfico de dispersión con colores según los clusters
+ggplot(datos_con_clusters, aes(x = `FG Made`, y = `FG %`, color = factor(Cluster))) +
+  geom_point() +
+  labs(title = "Clustering K-Means: FG Made vs. FG %", color = "Cluster") +
+  theme_minimal()
+
+```
+
+```{r}
+# Cargar librerías
+library(cluster)
+library(dplyr)
+library(GGally)
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos %>%
+  select(-c(`Season Type`))  # Excluir la columna 'Season Type'
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Agregar resultados del clustering al conjunto de datos
+datos_con_clusters <- cbind(datos, Cluster = kmeans_result$cluster)
+
+# Paso 4: Crear matriz de gráficos de dispersión con colores según los clusters
+ggpairs(datos_con_clusters,
+        columns = 2:ncol(datos_con_clusters),
+        aes(color = factor(Cluster)),
+        lower = list(continuous = wrap("points", alpha = 0.6, size = 0.5)),
+        upper = list(continuous = wrap("cor", size = 3)),
+        title = "Matriz de Gráficos de Dispersión con Clusters")
+
+
+```
+
+
+
+```{r}
+# Cargar librerías
+library(cluster)
+library(dplyr)
+library(ggplot2)
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos %>%
+  select(-c(`Season Type`))  # Excluir la columna 'Season Type'
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Agregar resultados del clustering al conjunto de datos
+datos_con_clusters <- cbind(datos, Cluster = kmeans_result$cluster)
+
+# Paso 4: Crear gráficos individuales de dispersión con colores según los clusters
+for (col1 in colnames(variables_clustering)) {
+  for (col2 in colnames(variables_clustering)) {
+    if (col1 != col2) {
+      plot_data <- data.frame(
+        x = variables_clustering[[col1]],
+        y = variables_clustering[[col2]],
+        Cluster = factor(kmeans_result$cluster)
+      )
+      
+      plot <- ggplot(plot_data, aes(x = x, y = y, color = Cluster)) +
+        geom_point(alpha = 0.6) +
+        labs(title = paste("Scatter Plot:", col1, "vs.", col2), color = "Cluster") +
+        theme_minimal()
+      
+      print(plot)  # Mostrar el gráfico
+    }
+  }
+}
+
+
+```
+
+
+
+
+```{r}
+### Mean Shift:
+
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c("Rank" ,"Games Played","Minutes Played" ,"FG Made","FG %","Three Point Field Goals Made")]
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Paso 4: Visualizar los resultados y Ajustar el tamaño del gráfico
+plot(variables_clustering, col = kmeans_result$cluster, pch = 16, cex = 0.1,
+     main = "Agrupamiento K-Means")
+
+```
+
+```{r}
+### Mean Shift:
+
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c("Three Point Field Goals Percentage","FT Made","FT %" ,"Rebounds","Assists","Steals")]
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Paso 4: Visualizar los resultados y Ajustar el tamaño del gráfico
+plot(variables_clustering, col = kmeans_result$cluster, pch = 16, cex = 0.1,
+     main = "Agrupamiento K-Means")
+
+
+
+```
+```{r}
+### Mean Shift:
+
+
+# Paso 1: Preparar los datos
+# Supongamos que tienes un conjunto de datos llamado 'datos' que contiene las variables para el clustering
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c("Blocks" ,"Turnovers","Personal Fouls","Efficency" ,"AST/TOV","STL/TOV")]
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Paso 4: Visualizar los resultados y Ajustar el tamaño del gráfico
+plot(variables_clustering, col = kmeans_result$cluster, pch = 16, cex = 0.1,
+     main = "Agrupamiento K-Means")
+
+```
+
+
+
+# Instalar y cargar el paquete MeanShiftR
+install.packages("MeanShiftR")
+library(MeanShiftR)
+
+
+```{r}
+# Paso 1: Cargar el paquete cluster
+if (!requireNamespace("cluster", quietly = TRUE)) {
+  install.packages("cluster")
+}
+library(cluster)
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c('Steals', 'Blocks')]
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Paso 4: Visualizar los resultados con colores distintos para cada grupo
+plot(variables_clustering, col = kmeans_result$cluster, pch = 16, cex = 2,
+     main = "Agrupamiento K-Means")
+
+# Paso 5: Visualizar los centros de los grupos en el gráfico
+points(kmeans_result$centers, col = 1:3, pch = 3, cex = 2)
+
+
+```
+
+
+
+```{r}
+# Paso 1: Cargar el paquete cluster
+if (!requireNamespace("cluster", quietly = TRUE)) {
+  install.packages("cluster")
+}
+library(cluster)
+
+# Paso 2: Seleccionar las variables para el clustering
+variables_clustering <- datos[, c("Personal Fouls","Efficency")]
+
+# Paso 3: Realizar el agrupamiento K-Means
+kmeans_result <- kmeans(variables_clustering, centers = 3)
+
+# Paso 4: Visualizar los resultados con colores distintos para cada grupo
+plot(variables_clustering, col = kmeans_result$cluster, pch = 16, cex = 2,
+     main = "Agrupamiento K-Means")
+
+# Paso 5: Visualizar los centros de los grupos en el gráfico
+points(kmeans_result$centers, col = 1:3, pch = 3, cex = 2)
+
+```
+
+
+### Resultados de K-medoids ###
+
+
+#Utilizaremos el algoritmo K-medoids para agrupar los datos y presentaremos los resultados mediante un gráfico de dispersión.
+
+
+```{r}
+### K-medoids
+
+library(cluster)
+
+# Crear un conjunto de datos de ejemplo
+datos <- matrix(rnorm(100), ncol = 2)
+
+# Realizar el agrupamiento k-medoids
+kmed_model <- pam(datos, diss = TRUE, k = 3)
+
+# Visualizar los resultados de forma más elaborada
+plot(datos, col = kmed_model$clustering,
+     main = "Agrupamiento K-medoids",
+     xlab = "Variable X", ylab = "Variable Y",
+     pch = 19)
+
+
+### forma 2 K-medoids
+
+library(cluster)
+
+# Crear un conjunto de datos de ejemplo
+datos <- matrix(rnorm(100), ncol = 2)
+
+# Realizar el agrupamiento K-medoids
+km_model <- pam(datos, k = 3)
+
+# Crear el gráfico utilizando cluster
+clusplot(datos, km_model$clustering)
+
+###forma 3 K-medoids
+# Encabezado: Forma 3 K-medoids
+### forma 3 K-medoids
+library(cluster)
+library(ggplot2)
+
+# Crear un conjunto de datos de ejemplo
+datos <- matrix(rnorm(100), ncol = 2)
+
+# Realizar el agrupamiento k-medoids
+kmed_model <- pam(datos, diss = TRUE, k = 3)
+
+# Convertir los datos a un data frame
+df <- data.frame(datos)
+
+# Agregar la columna de clustering al data frame
+df$cluster <- as.factor(kmed_model$clustering)
+
+# Calcular la media de cada variable
+media_x1 <- mean(df$X1)
+media_x2 <- mean(df$X2)
+
+# Crear el gráfico utilizando ggplot2
+ggplot(df, aes(x = X1, y = X2, color = cluster)) +
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Forma 3 K-medoids",
+       subtitle = paste("Media X1:", round(media_x1, 2), "Media X2:", round(media_x2, 2)))
+
+```
+
+El algoritmo K-medoids es una variante del algoritmo K-means que utiliza observaciones reales en lugar de promedios para representar los centros de los clusters. Su objetivo es dividir un conjunto de datos en grupos (clusters) donde cada observación en un cluster está más cerca del punto central (medoid) que de los puntos centrales de otros clusters. 
+
+### Resultados de Fuzzy C-means ###
+
+#En esta parte, aplicaremos el agrupamiento Fuzzy C-means para agrupar los datos con cierta incertidumbre en la asignación a los clústeres.
+
+
+```{r}
+### Fuzzy C-means
+
+
+library(e1071)
+
+# Crear un conjunto de datos de ejemplo
+datos <- matrix(rnorm(100), ncol = 2)
+
+# Realizar el agrupamiento Fuzzy C-means
+fcm_model <- cmeans(datos, centers = 3)
+
+# Visualizar los resultados de forma más bonita
+plot(datos, col = fcm_model$cluster, pch = 19,
+     main = "Agrupamiento Fuzzy C-means",
+     xlab = "Variable X", ylab = "Variable Y")
+
+
+### forma 2 Fuzzy C-means
+
+library(e1071)
+library(ggplot2)
+
+# Crear un conjunto de datos de ejemplo
+datos <- matrix(rnorm(100), ncol = 2)
+
+# Realizar el agrupamiento Fuzzy C-means
+fcm_model <- cmeans(datos, centers = 3)
+
+# Convertir los datos a un data frame
+df <- data.frame(datos)
+
+# Agregar la columna de clustering al data frame
+df$cluster <- as.factor(fcm_model$cluster)
+
+# Crear el gráfico utilizando ggplot2
+ggplot(df, aes(x = X1, y = X2, color = cluster)) +
+  geom_point() +
+  theme_minimal()
+```
+
+El algoritmo Fuzzy C-means es un método de agrupamiento que asigna a cada observación una pertenencia a cada cluster, en lugar de asignarla a un solo cluster. Esta pertenencia se expresa en términos de valores entre 0 y 1, lo que indica el grado de pertenencia a cada cluster.
+
+
+#Análisis de componentes principales (PCA): 
+
+
+
+# Paso 1: Instalar y cargar los paquetes necesarios
+install.packages("corrplot")
+install.packages("usdm")
+library(corrplot)
+library(usdm)
+library(readxl)
+library(FactoMineR)
+library(dplyr)
+library(gplots)
+
+
+```{r}
+# Paso 2: Seleccionar el archivo Excel utilizando file.choose()
+archivo_excel <- file.choose()
+
+# Paso 3: Leer el archivo Excel y almacenar los datos en un objeto
+library(readxl)
+datos <- read_excel(archivo_excel)
+
+# Paso 4: Convertir las variables no numéricas a numéricas
+numeric_columns <- sapply(datos, is.numeric)
+datos[!numeric_columns] <- lapply(datos[!numeric_columns], as.numeric)
+
+# Paso 5: Calcular la matriz de correlaciones
+cor_matrix <- cor(datos, use = "pairwise.complete.obs")
+
+# Paso 6: Mostrar el mapa de calor de la matriz de correlaciones con los números
+corrplot(cor_matrix, method = "number", type = "upper", tl.cex = 0.5, cl.cex = 0.5, number.cex = 0.4, number.digits = 2, addrect = 2)
+
+# Ajustar los márgenes gráficos
+par(mar = c(5, 4, 4, 2))
+
+# Generar el mapa de calor con números
+heatmap.2(as.matrix(cor_matrix, na.rm = TRUE),
+          trace = "none",
+          dendrogram = "both",
+          Colv = NA, Rowv = NA,
+          density.info = "none",
+          col = colorRampPalette(c("red", "white", "blue"))(120),
+          main = "Mapa de Calor - Matriz de Correlación",
+          keysize = 1,
+          key.title = NA,
+          cexRow = 0.8,
+          cexCol = 0.8)
+```
+
+
+##Ejecutar un ACP y determinar la varianza que representa cada factor. Incluir una gráfica de codo.
+
+
+```{r}
+##Ejecutar un ACP y determinar la varianza que representa cada factor. Incluir una gráfica de codo.
+
+library(vctrs)
+update.packages(ask = FALSE)
+
+# Cargar el paquete factoextra
+library(factoextra)
+```
+
+
+# Realizar el ACP
+
+La decisión sobre cuántos componentes principales retener en un análisis de componentes principales (PCA) puede basarse en varios criterios. E enfoque seguido sera:
+
+Regla del Codo (Elbow Rule): 
+
+En la gráfica de scree plot, busca el punto donde la disminución de los eigenvalues se vuelve más gradual, formando un codo. Los componentes anteriores a este punto suelen ser considerados significativos. Sin embargo, la interpretación del codo puede ser subjetiva.
+
+El punto de inflesion o recta curva tangente se situaria en los 2 componentes principales.
+
+```{r}
+# Cargar las librerías necesarias
+if (!requireNamespace("FactoMineR", quietly = TRUE)) {
+  install.packages("FactoMineR")
+}
+library(FactoMineR)
+
+# Paso 1: Seleccionar el archivo Excel utilizando file.choose()
+archivo_excel <- file.choose()
+
+# Paso 2: Leer el archivo Excel y almacenar los datos en un objeto
+datos <- readxl::read_excel(archivo_excel)
+
+# Eliminar filas con valores faltantes (NA)
+datos <- datos[complete.cases(datos), ]
+
+# Excluir la columna "Season Type"
+datos <- datos[, -which(names(datos) == "Season Type")]
+
+# Paso 3: Realizar el ACP
+pca <- PCA(datos, scale.unit = TRUE, graph = FALSE)
+
+# Obtener los valores propios
+eig.val <- pca$eig
+
+# Gráfica de codo
+barplot(eig.val, main = "Scree Plot", ylab = "Eigenvalues")
+
+# Gráfico de codo para visualizar la varianza explicada acumulada
+plot(var_exp, type = "b", xlab = "Componente Principal", ylab = "Varianza Explicada Acumulada")
+
+```
+
+realiza un Análisis de Componentes Principales (PCA) en los datos contenidos en un archivo de Excel seleccionado por el usuario. Luego, crea una gráfica de scree plot para visualizar los eigenvalues asociados a cada componente principal.
+
+La gráfica de scree plot es una representación visual que muestra la contribución relativa de cada componente principal en términos de la varianza total de los datos. En este caso específico:
+
+El eje de las ordenadas (y) representa los eigenvalues de los componentes principales.
+El eje de las abscisas (x) muestra el número de cada componente, en orden descendente, es decir, desde el componente con el eigenvalue más alto hasta el componente con el eigenvalue más bajo.
+
+La gráfica de barras en la gráfica de scree plot representa la magnitud de los eigenvalues de cada componente.
+La idea detrás de esta representación es que los componentes con eigenvalues significativamente más altos son los que capturan la mayoría de la variabilidad en los datos originales. Por lo tanto, en la gráfica de scree plot, se busca un punto de inflexión en el que la disminución de la magnitud de los eigenvalues se vuelva más gradual, indicando que los componentes subsiguientes contribuyen menos a la varianza total.
+
+En resumen, esta gráfica te permite tomar decisiones informadas sobre cuántos componentes principales retener en el análisis, ya que generalmente se retienen aquellos componentes con eigenvalues por encima de cierto umbral o hasta el punto de inflexión en la gráfica.
+
+
+#otra alternativa para la grafica del codo
+
+
+```{r}
+#otra alternativa para la grafica del codo
+
+# Calcular la suma de los cuadrados para diferentes valores de k
+k_values <- 1:10
+ss_values <- sapply(k_values, function(k) {
+  kmeans(datos, centers = k)$tot.withinss
+})
+
+# Graficar la suma de los cuadrados en función de k
+plot(k_values, ss_values, type = "b", pch = 19, frame = FALSE,
+     xlab = "Número de clústeres (k)", ylab = "Suma de los cuadrados",
+     main = "Gráfica de codo")
+
+
+#Utilizar el gráfico de cargas para interpretar la primera carga.
+# Instalar y cargar las bibliotecas necesarias
+
+if (!requireNamespace("factoextra", quietly = TRUE)) {
+  install.packages("factoextra")
+}
+library(factoextra)
+
+# Crear el gráfico de cargas para interpretar la primera carga
+fviz_pca_var(pca, col.var = "contrib", repel = TRUE)
+```
+
+
+#Usar un biplot u otro tipo de gráfica que incluya los dos primeros factores y cargas para identificar individuos únicos.
+
+#Por si existen problemas con loas actualizaciones de los paquetes
+
+
+update.packages(ask = FALSE)
+remove.packages("factoextra")
+remove.packages("vctrs")
+install.packages("factoextra")
+install.packages("vctrs")
+
+library(vctrs)
+library(factoextra)
+
+```{r}
+##Biplot:
+fviz_pca_biplot(pca,scale = 1, label = "ind", col.ind = "cos2", col.var = "contrib", geom = "text")
+```
+
+##Scatterplot:
+
+# Crear un scatterplot con los dos primeros factores
+
+```{r}
+##Scatterplot:
+
+# Crear un scatterplot con los dos primeros factores
+
+library(factoextra)
+
+# Crear el scatterplot con los dos primeros factores
+fviz_pca_ind(pca, col.ind = "cos2", col.var = "contrib",
+             repel = TRUE, geom = c("point", "text"),
+             title = "Scatterplot de los dos primeros factores")
+
+
+##Alternativo: Agregar colores o formas para distinguir grupos o clústeres si es necesario
+
+# Crear un vector de colores o formas para cada punto
+grupo <- cutree(hierarchical, k)  # Obtener los grupos del agrupamiento jerárquico
+
+# Filtrar filas no faltantes en los vectores de coordenadas
+valid_rows <- complete.cases(pca$scores[, 1], pca$scores[, 2])
+valid_factor1 <- pca$scores[, 1][valid_rows]
+valid_factor2 <- pca$scores[, 2][valid_rows]
+valid_grupo <- grupo[valid_rows]
+
+# Crear un scatterplot con colores o formas distintas para cada grupo
+plot(valid_factor1, valid_factor2, col = valid_grupo, pch = valid_grupo,
+     main = "Scatterplot de los dos primeros factores", xlab = "Factor 1", ylab = "Factor 2")
+
+##Biplot:
+fviz_pca_biplot(pca,scale = 1, label = "ind", col.ind = "cos2", col.var = "contrib", geom = "text")
+
+# Agregar una leyenda para identificar los colores o formas
+legend("topright", legend = unique(valid_grupo), col = unique(valid_grupo), pch = unique(valid_grupo),
+       title = "Grupos", title.col = "black")
+```
+
+
+
+```{r}
+
+# Supongamos que tienes tus datos y el número de clusters 'k'
+
+library(readxl)
+
+archivo_excel <- file.choose()
+datos <- read_excel(archivo_excel)
+k <- 5  # Número de clusters deseado
+
+# Paso 1: Aplicar el agrupamiento jerárquico
+dist_matrix <- dist(datos)  # Calcular la matriz de distancias
+hierarchical <- hclust(dist_matrix, method = "complete")  # Aplicar el clustering jerárquico
+
+# Paso 2: Obtener los grupos del agrupamiento jerárquico
+grupo <- cutree(hierarchical, k)
+
+# Paso 3: Seleccionar las columnas numéricas para el PCA
+variables_pca <- datos[, sapply(datos, is.numeric)]
+
+# Paso 4: Realizar el análisis de Componentes Principales (PCA)
+pca <- prcomp(variables_pca, scale = TRUE)
+
+# Paso 5: Crear el scatterplot con los dos primeros factores
+library(factoextra)
+
+# Crear el scatterplot con los dos primeros factores
+fviz_pca_ind(pca, col.ind = "cos2", col.var = "contrib",
+             repel = TRUE, geom = c("point", "text"),
+             title = "Scatterplot de los dos primeros factores")
+
+# Alternativo: Agregar colores o formas para distinguir grupos o clústeres
+# Filtrar filas no faltantes en los vectores de coordenadas
+valid_rows <- complete.cases(pca$x[, 1], pca$x[, 2])
+valid_factor1 <- pca$x[, 1][valid_rows]
+valid_factor2 <- pca$x[, 2][valid_rows]
+valid_grupo <- grupo[valid_rows]
+
+# Crear un scatterplot con colores o formas distintas para cada grupo
+plot(valid_factor1, valid_factor2, col = valid_grupo, pch = valid_grupo,
+     main = "Scatterplot de los dos primeros factores", xlab = "Factor 1", ylab = "Factor 2")
+
+# Agregar una leyenda para identificar los colores o formas
+legend("topright", legend = unique(valid_grupo), col = unique(valid_grupo), pch = unique(valid_grupo),
+       title = "Grupos", title.col = "black")
+
+```
+
+
+##Interpretacion de los resultados del ACP.
+
+
+```{r}
+# Cargar librerías necesarias
+library(factoextra)
+library(dplyr)
+library(tidyr)
+
+library(readxl)
+
+archivo_excel <- file.choose()
+datos <- read_excel(archivo_excel)
+
+# Seleccionar solo las columnas numéricas
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Eliminar columnas con NA
+numeric_data <- numeric_data %>% na.omit()
+
+# Realizar el Análisis de Componentes Principales (ACP)
+pca_result <- prcomp(numeric_data, scale. = TRUE)
+
+# 1. Interpretación de los componentes principales y varianza explicada:
+
+# Varianza explicada por cada componente principal
+var_exp <- pca_result$sdev^2 / sum(pca_result$sdev^2)
+
+# Imprimir la varianza explicada
+print(var_exp)
+
+# Gráfico de codo para visualizar la varianza explicada acumulada
+plot(var_exp, type = "b", xlab = "Componente Principal", ylab = "Varianza Explicada Acumulada")
+
+# 2. Cargas factoriales:
+
+# Obtener las cargas factoriales de cada variable en los componentes principales
+loadings <- pca_result$rotation
+
+# Imprimir las cargas factoriales
+print(loadings)
+
+# Gráfico de barras para visualizar las cargas factoriales de la primera componente
+barplot(loadings[, 1], names.arg = colnames(numeric_data), ylab = "Carga Factorial", main = "Cargas Factoriales - Componente 1")
+
+# 3. Visualización gráfica y análisis cualitativo:
+
+# Crear el gráfico de dispersión basado en las dos primeras componentes principales
+fviz_pca_ind(pca_result, col.ind = "grey", col.var = "navy", repel = TRUE)
+
+# Si tienes etiquetas para las observaciones, se pueden agregar al gráfico
+fviz_pca_ind(pca_result, col.ind = "grey", col.var = "navy", repel = TRUE, addlabels = rownames(numeric_data))
+
+```
+
+El gráfico de barras generado para las cargas factoriales de la primera componente muestra visualmente qué variables tienen una influencia significativa en esa componente. Si una variable tiene una carga factorial alta en la primera componente, significa que esa variable tiene un impacto considerable en la formación de la primera componente principal.
+
+
+
+#¿Identifica algún tipo de relación entre los resultados del análisis del agrupamiento y los del ACP?
+
+#Se puede identificar una relación entre los resultados del análisis de agrupamiento (En referencia a la actividad evaluable 3) y los del análisis de componentes principales (ACP) (actividad evaluable 4). Ambos métodos son técnicas utilizadas en el análisis de datos para encontrar patrones y estructuras en los datos.
+
+
+```{r}
+# 1-Generar una matriz de correlación de las variables y mostrar el mapa de calor:
+
+# Cargar el paquete readxl
+library(readxl)
+
+# Cargar el archivo de Excel
+nombre_archivo <- file.choose()  # Abre un cuadro de diálogo para seleccionar el archivo de Excel
+data_ES <- read_excel(nombre_archivo)
+
+
+
+# Seleccionar solo las columnas numéricas para el cálculo de la matriz de correlación
+numeric_columns <- data_ES[, sapply(data_ES, is.numeric)]
+
+# Calcular la matriz de correlación solo para las columnas numéricas
+cor_matrix <- cor(numeric_columns)
+
+
+# Cargar el paquete pheatmap
+library(pheatmap)
+
+# Generar el mapa de calor con números
+pheatmap(cor_matrix, fontsize = 8, main = "Mapa de Calor - Matriz de Correlación",
+         col = colorRampPalette(c("grey", "white", "green"))(120), cellnote = round(cor_matrix, 2))
+
+
+# 2-Ejecutar un ACP y determinar la varianza que representa cada factor con una gráfica de codo:
+
+# Cargar paquetes necesarios
+library(readxl)
+library(factoextra)
+
+# Cargar el archivo de Excel
+nombre_archivo <- file.choose()
+data_ES <- read_excel(nombre_archivo)
+
+# Eliminar filas con valores faltantes (NA)
+data_ES <- data_ES[complete.cases(data_ES), ]
+
+# Seleccionar solo las columnas numéricas para el ACP
+numeric_columns <- data_ES[, sapply(data_ES, is.numeric)]
+
+# Realizar el ACP
+pca <- princomp(numeric_columns, cor = TRUE)
+
+# Gráfica de codo con screeplot
+screeplot(pca, main = "Gráfica de Codo - ACP")
+
+
+# 3-Utilizar el gráfico de cargas para interpretar la primera carga:
+
+# Gráfico de cargas para el primer factor
+biplot(pca, scale = 1, col = c("grey", "red", "green"), cex = 0.5, cex.axis = 0.5)
+
+
+# 4-Usar un biplot u otro tipo de gráfica que incluya los dos primeros factores y cargas para identificar individuos únicos:
+
+# Gráfico biplot para los dos primeros factores con etiquetas de los individuos
+fviz_pca_biplot(pca, scale = 1, label = "ind", col.ind = "cos2", col.var = "contrib", geom = "text")
+```
+
+
+#Análisis de Regresión:
+
+
+```{r}
+# Paso 1: Seleccionar las variables para el análisis de regresión
+variables_regresion <- datos[, c('Minutes Played', 'Games Played', 'Personal Fouls', 'Rebounds')]
+
+# Paso 2: Realizar el análisis de regresión lineal múltiple
+modelo_regresion <- lm(`Minutes Played` ~ ., data = variables_regresion)
+
+# Paso 3: Obtener los resultados del modelo de regresión
+summary(modelo_regresion)
+
+
+################################ Con n variables del modelo.
+
+# Paso 1: Seleccionar las variables para el análisis de regresión
+variables_regresion <- data_ES[, c('Minutes Played', 'Games Played', 'Personal Fouls', 'Rebounds')]
+
+# Paso 2: Realizar el análisis de regresión lineal múltiple
+modelo_regresion <- lm(`Minutes Played` ~ ., data = variables_regresion)
+
+# Paso 3: Obtener los resultados del modelo de regresión
+summary(modelo_regresion)
+
+
+################################Con todas las variables del modelo.
+
+# Paso 1: Seleccionar todas las variables para el análisis de regresión
+variables_regresion <- data_ES
+
+# Paso 2: Realizar el análisis de regresión lineal múltiple
+modelo_regresion <- lm(`Minutes Played` ~ ., data = variables_regresion)
+
+# Paso 3: Obtener los resultados del modelo de regresión
+summary(modelo_regresion)
+```
+
+Aquí hay una descripción de los tres resultados:
+
+Primer Resultado:
+
+Coeficientes Estimados:
+
+Intercepto: -76.89818
+Games Played: 12.92933
+Personal Fouls: 3.43227
+Rebounds: 1.24190
+
+Estos coeficientes representan la relación entre las variables predictoras y la variable de respuesta "Minutes Played".
+El valor p (Pr(>|t|)) para cada coeficiente es extremadamente pequeño (<2e-16), lo que sugiere que todas las variables predictoras son estadísticamente significativas para predecir los minutos jugados.
+
+Segundo Resultado:
+
+Los resultados son similares al primer resultado, pero también incluye más variables predictoras, como Rank, Season Start Year, Player ID, entre otras.
+
+La mayoría de las variables predictoras tienen valores p muy pequeños, lo que indica su significancia estadística en el modelo.
+
+Tercer Resultado:
+
+Este resultado también tiene un conjunto de variables predictoras, pero algunas variables han sido excluidas debido a problemas de singularidad.
+
+Ciertas variables tienen valores p ligeramente mayores, lo que sugiere que pueden ser menos significativas, pero en general, el modelo aún se ajusta bastante bien a los datos.
+
+En todos los resultados, el coeficiente R^2 o (Multiple R-squared) es alto, lo que sugiere que las variables predictoras incluidas explican una gran proporción de la variabilidad en los minutos jugados. 
+
+
+
+#¿Cuáles son sus conclusiones generales con respecto a estas observaciones y variables tras emplear múltiples técnicas de modelado no supervisado?
+  
+  
+#conclusiones generales:
+
+
+
+#Análisis de correlación avanzado:
+
+
+# Instalar y cargar las librerías necesarias
+install.packages("ComplexUpset")
+library(ComplexUpset)
+library(FactoMineR)
+library(gplots)  
+
+```{r}
+# Seleccionar las variables para el análisis de PCA
+variables_pca <- datos[, c('Games Played', 'Minutes Played', 'Personal Fouls', 'Efficency', 'AST/TOV', 'STL/TOV')]
+
+# Realizar el análisis de PCA
+pca_result <- PCA(variables_pca, graph = FALSE)
+
+# Obtener las correlaciones entre coordenadas de individuos y variables originales
+cor_with_vars <- cor(pca_result$ind$coord, variables_pca)
+
+# Crear una paleta de colores personalizada para el mapa de calor
+my_palette <- colorRampPalette(c("grey", "white", "green"))(100)
+
+# Crear el mapa de calor personalizado con más opciones de personalización
+heatmap.2(
+  cor_with_vars,
+  col = my_palette,
+  main = "Mapa de Calor - Correlaciones entre Componentes Principales y Variables Originales",
+  xlab = "Variables Originales",
+  ylab = "Componentes Principales",
+  key = TRUE,  # Mostrar la barra de colores a la derecha
+  key.title = "Correlación",  # Título de la barra de colores
+  density.info = "none"  # No mostrar información de densidad
+)
+
+```
+
+
+```{r}
+# Paso 1: Cargar la librería necesaria
+if (!requireNamespace("psych", quietly = TRUE)) {
+  install.packages("psych")
+}
+library(psych)
+
+# Paso 2: Seleccionar las variables para el análisis de correlación
+variables_cor <- datos[, c("Rank" ,"Games Played","Minutes Played" ,"FG Made","FG %","Three Point Field Goals Made" ,"Three Point Field Goals Percentage","FT Made","FT %" ,"Rebounds","Assists","Steals" ,"Blocks" ,"Turnovers","Personal Fouls","Efficency" ,"AST/TOV","STL/TOV")]
+
+# Paso 3: Calcular la matriz de correlación
+cor_matrix <- cor(variables_cor)
+
+# Paso 4: Realizar el análisis de componentes principales (PCA) sobre la matriz de correlación
+pca_result <- principal(cor_matrix, nfactors = 3, rotate = "none")
+
+
+# Paso 6: Calcular la correlación entre las variables originales y los componentes principales
+cor_pca <- cor(variables_cor, pca_result$scores)
+
+# Paso 7: Visualizar los resultados de la correlación entre variables y componentes principales
+print(cor_pca)
+
+# Paso 8: Visualizar los resultados de la correlación entre variables y componentes principales
+library(heatmaply)
+
+
+# Ajustar los márgenes gráficos
+par(mar = c(5, 4, 4, 2))
+
+# Crear un mapa de calor para visualizar las correlaciones
+heatmap(as.matrix(cor_matrix, na.rm = TRUE),
+          trace = "none",
+          dendrogram = "both",
+          Colv = NA, Rowv = NA,
+          density.info = "none",
+          col = colorRampPalette(c("grey", "white", "green"))(120),
+          main = "Mapa de Calor - Matriz de Correlación",
+          keysize = 1,
+          key.title = NA,
+          cexRow = 0.8,
+          cexCol = 0.8)
+```
+
+
+
+##Resumen de los hallazgos obtenidos a partir del análisis de los datos y sugerencias para realizar otros análisis mediante modelado supervisado.
+
+Resumen de Hallazgos:
+
+Análisis de Correlación y Estadísticas Descriptivas:
+
+Se calcularon las estadísticas descriptivas de las variables relevantes, lo que permitió obtener una comprensión general de la distribución de los datos.
+El análisis de correlación reveló ciertas relaciones entre las variables, como la correlación positiva entre "Minutes Played" y "Games Played", así como algunas relaciones negativas como la correlación entre "Turnovers" y "Efficiency".
+
+Análisis de Agrupamiento:
+
+Mediante el análisis de K-Means y el análisis jerárquico, se agruparon los jugadores en clústeres basados en su rendimiento en diferentes estadísticas.
+Se observaron patrones interesantes en la distribución de los jugadores en los clústeres, lo que podría sugerir diferentes estilos de juego o roles en el equipo.
+
+Análisis de Componentes Principales (ACP):
+
+El ACP permitió reducir la dimensionalidad de los datos y representarlos en un espacio de menor dimensión.
+Se identificaron los componentes principales que explican la mayor parte de la varianza en los datos, lo que puede ayudar a resaltar las características más importantes.
+
+Sugerencias para Modelado Supervisado:
+
+Regresión Supervisada:
+
+Realizar análisis de regresión para predecir variables como "Minutes Played" basándose en otras estadísticas del jugador.
+Utilizar técnicas avanzadas como regresión regularizada (Ridge, Lasso) para evitar problemas de multicolinealidad y mejorar la capacidad de generalización del modelo.
+
+
+Clasificación Supervisada:
+
+Utilizar técnicas de clasificación, como Regresión Logística, SVM, Random Forest, etc., para predecir la pertenencia de un jugador a un cierto clúster.
+Esto permitiría clasificar automáticamente a los jugadores en grupos y entender qué características son más relevantes para la agrupación.
+
+Predicción de Rendimiento:
+
+Construir modelos predictivos para estimar métricas como "Efficiency" o "Points" en función de variables relevantes.
+Utilizar métodos de validación cruzada para evaluar la capacidad de generalización de los modelos.
+
+Optimización de Jugadores:
+
+Utilizar el análisis de componentes principales para identificar patrones subyacentes en los datos y seleccionar jugadores que se ajusten a ciertos perfiles.
+Ayudaría en la toma de decisiones estratégicas para la conformación del equipo.
+
+Análisis Temporal:
+
+Si los datos incluyen información temporal, se pueden realizar análisis de series temporales para comprender cómo evolucionan las estadísticas de los jugadores a lo largo del tiempo.
+En general, la combinación de técnicas de análisis no supervisado y supervisado puede proporcionar una visión integral de los datos y ayudar a tomar decisiones informadas en el contexto del baloncesto.
+
+
+
+### Conclusiones ###
+
+
+Conclusiones Finales:
+
+
+El análisis exhaustivo de los datos de baloncesto ha arrojado valiosos hallazgos y perspectivas que pueden ser de gran utilidad para comprender y mejorar el rendimiento de los jugadores y la estrategia del equipo. A través de diversas técnicas de análisis, hemos obtenido información clave que puede influir en la toma de decisiones y en la optimización de los recursos disponibles.
+
+Patrones y Relaciones Relevantes: 
+
+El análisis de correlación y estadísticas descriptivas nos ha permitido identificar patrones y relaciones entre diferentes variables. Estas relaciones pueden dar lugar a insights sobre cómo ciertas estadísticas individuales influyen en el rendimiento global del jugador y su impacto en el equipo.
+
+Segmentación de Jugadores: 
+
+Los resultados del análisis de agrupamiento han agrupado a los jugadores en clústeres, resaltando diferentes perfiles de rendimiento. Esto puede ayudar a los entrenadores y directores técnicos a diseñar estrategias específicas para cada clúster, maximizando las fortalezas de cada grupo y abordando sus debilidades.
+
+Reducción de Dimensionalidad: 
+
+El análisis de componentes principales (ACP) nos ha permitido reducir la dimensionalidad de los datos sin perder información crítica. Esto es especialmente útil para identificar las características más influyentes que afectan el rendimiento de los jugadores.
+
+Sugerencias para el Futuro: 
+
+Las posibilidades futuras son emocionantes. La aplicación de técnicas de modelado supervisado puede ayudar a predecir el rendimiento individual y colectivo, lo que aportaría un valor significativo a la estrategia del equipo. Además, el análisis temporal podría proporcionar ideas sobre cómo evolucionan las estadísticas con el tiempo y cómo aprovechar esos cambios.
+
+Toma de Decisiones Informadas: 
+
+En última instancia, estos análisis proporcionan a los equipos herramientas para tomar decisiones más informadas. Desde la selección de jugadores hasta la definición de tácticas de juego, la información derivada de estos análisis puede ser un recurso invaluable para alcanzar el éxito en la cancha.
+
+En resumen, este análisis ha proporcionado una visión más profunda y cuantitativa del rendimiento de los jugadores de baloncesto. Las herramientas y conocimientos obtenidos pueden ser utilizados para optimizar estrategias, maximizar el rendimiento individual y colectivo, y mejorar la competitividad del equipo en general. 
+
+El análisis continuo y la incorporación de técnicas avanzadas pueden abrir nuevas oportunidades para mejorar la toma de decisiones y alcanzar niveles más altos de éxito en el mundo del baloncesto.
+
+
+
+###### Presentación del proyecto– Final de la semana 9 ######
+
+
+#• Resultados de los modelos lineales, de análisis de la varianza o de regresión logística relevantes
+
+Modelo lineal
+
+```{r}
+# Cargar librerías necesarias
+library(ggplot2)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Iterar a través de las variables numéricas
+for (col in colnames(numeric_data)) {
+  if (col != "Player ID" && col != "Team ID") {
+    # Ajustar un modelo lineal
+    model <- lm(datos[[col]] ~ `Minutes Played`, data = datos)
+    
+    # Obtener los coeficientes del modelo
+    coefficients <- coef(model)
+    
+    # Crear un gráfico para cada variable
+    p <- ggplot(datos, aes(`Minutes Played`, datos[[col]])) +
+      geom_point() +
+      geom_smooth(method = "lm", se = FALSE, color = "blue") +
+      labs(title = paste("Modelo Lineal -", col), x = "Minutes Played", y = col)
+    
+    # Imprimir los coeficientes
+    cat(paste("Variable:", col, "\n"))
+    cat(paste("Coeficientes:", coefficients, "\n"))
+    
+    # Mostrar el gráfico
+    print(p)
+  }
+}
+
+
+
+```
+
+El código que proporcionaste realiza un análisis de regresión lineal entre la variable "Minutes Played" (Minutos Jugados) y cada una de las variables numéricas en el conjunto de datos. A continuación, analizo los resultados generados por el código para cada variable:
+
+#Field Goals Made (FG Made):
+
+Coeficientes: Intercepto: 0.172, Slope (Minutes Played): 0.140
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.14 en los Field Goals Made.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "FG Made".
+
+#Field Goals Percentage (FG%):
+
+Coeficientes: Intercepto: 38.499, Slope (Minutes Played): 0.010
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.01 en el Field Goals Percentage.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "FG%".
+
+#Three Point Field Goals Made:
+
+Coeficientes: Intercepto: 0.029, Slope (Minutes Played): 0.043
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.043 en los Three Point Field Goals Made.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "Three Point Field Goals Made".
+Three Point Field Goals Percentage:
+
+Coeficientes: Intercepto: 34.226, Slope (Minutes Played): 0.002
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.002 en el Three Point Field Goals Percentage.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "Three Point Field Goals Percentage".
+
+#Free Throws Made (FT Made):
+
+Coeficientes: Intercepto: 0.090, Slope (Minutes Played): 0.056
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.056 en los Free Throws Made.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "FT Made".
+
+#Free Throws Percentage (FT%):
+
+Coeficientes: Intercepto: 18.899, Slope (Minutes Played): 0.001
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.001 en el Free Throws Percentage.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "FT%".
+
+#Rebounds:
+
+Coeficientes: Intercepto: 0.237, Slope (Minutes Played): 0.084
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.084 en los Rebounds.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "Rebounds".
+
+#Assists:
+
+Coeficientes: Intercepto: 0.156, Slope (Minutes Played): 0.056
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.056 en los Assists.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "Assists".
+
+#Steals:
+
+Coeficientes: Intercepto: 0.035, Slope (Minutes Played): 0.029
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.029 en los Steals.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "Steals".
+
+#Blocks:
+
+Coeficientes: Intercepto: 0.016, Slope (Minutes Played): 0.013
+Interpretación: Por cada aumento de 1 en los minutos jugados, se espera un aumento de aproximadamente 0.013 en los Blocks.
+Gráfico: El gráfico muestra una relación positiva entre "Minutes Played" y "Blocks".
+En general, la mayoría de las variables muestran una relación positiva con los minutos jugados. Cada coeficiente de pendiente indica cuánto cambia la variable dependiente por un aumento de 1 en los minutos jugados, manteniendo las otras variables constantes. 
+
+
+Análisis de Varianza (ANOVA)
+
+
+```{r}
+# Cargar librerías necesarias
+library(ggplot2)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Iterar a través de las variables numéricas
+for (col in colnames(numeric_data)) {
+  if (col != "Player ID" && col != "Team ID") {
+    # Realizar el análisis de varianza (ANOVA)
+    anova_result <- aov(datos[[col]] ~ `Season Start Year`, data = datos)
+    
+    # Obtener los resultados del ANOVA
+    anova_summary <- summary(anova_result)
+    
+    # Crear un gráfico de boxplot para cada variable
+    p <- ggplot(datos, aes(x = `Season Start Year`, y = datos[[col]])) +
+      geom_boxplot() +
+      labs(title = paste("Análisis de Varianza (ANOVA) -", col), x = "Season Start Year", y = col)
+    
+    # Imprimir los resultados del ANOVA
+    cat(paste("Variable:", col, "\n"))
+    print(anova_summary)
+    
+    # Mostrar el gráfico
+    print(p)
+  }
+}
+
+```
+
+
+Regresión Logística
+
+
+```{r}
+# Cargar librerías necesarias
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(pROC)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Crear una columna para la variable objetivo (binaria)
+numeric_data$HighScorer <- ifelse(numeric_data$`Rank` <= 5, 1, 0)
+
+# Iterar a través de las variables numéricas
+for (col in colnames(numeric_data)) {
+  if (col != "Player ID" && col != "Team ID" && col != "HighScorer") {
+    # Filtrar solo las observaciones con valores no faltantes
+    filtered_data <- numeric_data %>%
+      filter(!is.na(.data[[col]]))
+    
+    # Ajustar un modelo de Regresión Logística
+    model <- glm(HighScorer ~ ., data = filtered_data, family = binomial)
+    
+    # Imprimir el resumen del modelo
+    print(summary(model))
+    
+    # Calcular el área bajo la curva ROC
+    predicted_prob <- predict(model, newdata = filtered_data, type = "response")
+    roc_data <- roc(filtered_data$HighScorer, predicted_prob)
+    
+    # Graficar la curva ROC
+    ggroc(roc_data) +
+      labs(title = paste("Regresión Logística -", col))
+  }
+}
+
+```
+
+Estos datos provienen de un modelo de regresión logística que busca predecir la variable HighScorer (probabilidad de ser el máximo anotador) en función de varias variables predictoras. Aquí hay una explicación de lo que muestran estos resultados:
+
+Deviance Residuals: 
+
+Estos valores representan las diferencias entre las observaciones reales y las predicciones del modelo en términos de desviaciones. Son útiles para evaluar la bondad del ajuste del modelo. Los valores cercanos a cero indican que las predicciones están cerca de las observaciones reales.
+
+Coefficients (Estimaciones): 
+
+Estos son los coeficientes estimados para cada una de las variables predictoras en el modelo. Representan cómo cada variable afecta el log-odds de que un caso sea un "HighScorer". Los valores negativos indican que a medida que la variable aumenta, la probabilidad de ser un "HighScorer" disminuye, y los valores positivos indican lo contrario.
+
+Std. Error: 
+
+Estos valores miden la incertidumbre asociada a cada coeficiente estimado. Valores más pequeños indican una estimación más precisa.
+
+z value: 
+
+El valor z es el estadístico de prueba que compara el coeficiente estimado con su error estándar. Indica cuán lejos está la estimación del valor nulo (cero). Si el valor absoluto es grande, el coeficiente es más significativo.
+
+Pr(>|z|): 
+
+Este es el valor p asociado a cada coeficiente. Indica la probabilidad de observar el estadístico de prueba z bajo la hipótesis nula de que el coeficiente es cero. Valores bajos (generalmente < 0.05) indican que el coeficiente es estadísticamente significativo.
+
+Residual Deviance: 
+
+Este es el valor de devianza residual del modelo. Cuanto más cercano a cero, mejor es el ajuste del modelo a los datos.
+
+AIC: 
+
+El AIC (Criterio de Información de Akaike) es una medida de la calidad del modelo en términos de ajuste y complejidad. Un AIC más bajo indica un mejor ajuste y un equilibrio entre el ajuste y la complejidad del modelo.
+
+Number of Fisher Scoring iterations: 
+
+Indica cuántas iteraciones del método de Fisher Scoring se realizaron para estimar los coeficientes del modelo.
+
+Setting levels: 
+
+Muestra cómo se establecieron los niveles para las categorías de la variable HighScorer.
+
+Setting direction: 
+
+Indica la dirección de las categorías en la variable HighScorer.
+
+Warning: 
+
+Los mensajes de advertencia indican posibles problemas durante la estimación del modelo. En este caso, hay advertencias sobre la no convergencia del algoritmo y sobre probabilidades ajustadas numéricamente iguales a 0 o 1.
+
+En resumen, estos resultados describen cómo cada variable predictora contribuye a predecir la probabilidad de ser un "HighScorer" y proporcionan información sobre la significancia estadística de cada coeficiente.
+
+
+
+
+```{r}
+# Cargar librerías necesarias
+library(dplyr)
+library(ggplot2)
+library(pROC)
+library(gridExtra)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Crear una columna para la variable objetivo (binaria)
+numeric_data$HighScorer <- ifelse(numeric_data$`Rank` <= 5, 1, 0)
+
+# Crear una lista para almacenar los gráficos
+roc_plots <- list()
+
+# Iterar a través de las variables numéricas
+for (col in colnames(numeric_data)) {
+  if (col != "Player ID" && col != "Team ID" && col != "HighScorer") {
+    # Filtrar solo las observaciones con valores no faltantes
+    filtered_data <- numeric_data %>%
+      filter(!is.na(.data[[col]]))
+    
+    # Ajustar un modelo de Regresión Logística
+    model <- glm(HighScorer ~ ., data = filtered_data, family = binomial)
+    
+    # Calcular el área bajo la curva ROC
+    predicted_prob <- predict(model, newdata = filtered_data, type = "response")
+    roc_data <- roc(filtered_data$HighScorer, predicted_prob)
+    
+    # Crear un gráfico ROC y almacenarlo en la lista
+    roc_plot <- ggroc(roc_data) +
+      labs(title = paste("Regresión Logística -", col)) +
+      ggplot2::annotate("text", x = 0.01, y = 0.01, label = col)  # Agregar etiqueta con el nombre de la variable
+    roc_plots[[col]] <- roc_plot
+  }
+}
+
+# Combinar los gráficos utilizando grid.arrange
+combined_plots <- do.call("grid.arrange", c(roc_plots, ncol = 2))
+
+# Imprimir los gráficos combinados
+print(combined_plots)
+
+
+```
+
+
+Modelo de Series Temporales:
+
+
+
+```{r}
+# Cargar librerías necesarias
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Iterar a través de las variables numéricas
+for (col in colnames(numeric_data)) {
+  if (col != "Player ID" && col != "Team ID") {
+    # Filtrar solo la variable seleccionada
+    variable_data <- datos %>%
+      select(`Season Start Year`, col) %>%
+      filter(!is.na(`Season Start Year`) & !is.na(.data[[col]]))
+    
+    # Crear una serie temporal
+    time_series <- ts(variable_data[[col]],
+                      start = min(variable_data$`Season Start Year`),
+                      frequency = 1)  # Una observación por año
+    
+    # Visualizar la serie temporal
+    plot(time_series, xlab = "Nº de celda", ylab = col,
+         main = paste("Serie Temporal -", col))
+  }
+}
+
+```
+
+
+
+Modelo de Clasificación con SVM:
+
+
+```{r}
+# Cargar librerías necesarias
+library(e1071)
+library(pROC)
+library(dplyr)
+
+# Filtrar solo las variables numéricas
+numeric_columns <- sapply(datos, is.numeric)
+numeric_data <- datos[, numeric_columns]
+
+# Crear una columna para la variable objetivo (binaria)
+numeric_data$HighScorer <- ifelse(numeric_data$Rank <= 5, 1, 0)
+
+# Filtrar solo las observaciones con valores no faltantes
+filtered_data <- numeric_data %>%
+  filter(!is.na(HighScorer))
+
+# Dividir los datos en conjunto de entrenamiento y prueba
+set.seed(123)
+train_index <- sample(1:nrow(filtered_data), nrow(filtered_data) * 0.8)
+train_data <- filtered_data[train_index, ]
+test_data <- filtered_data[-train_index, ]
+
+# Ajustar un modelo de SVM
+svm_model <- svm(HighScorer ~ ., data = train_data, kernel = "linear", probability = TRUE)
+
+# Predecir en el conjunto de prueba
+svm_probs_decision <- predict(svm_model, newdata = test_data, decision.values = TRUE)
+svm_probs_positive_manual <- 1 / (1 + exp(-svm_probs_decision))
+
+# Evaluar el rendimiento del modelo
+roc_obj <- roc(test_data$HighScorer, svm_probs_positive_manual)
+auc <- auc(roc_obj)
+
+# Imprimir resultados
+cat("Área bajo la curva ROC:", auc, "\n")
+
+```
+
+El resultado se refiere a un modelo de clasificación construido utilizando el algoritmo de Máquinas de Soporte Vectorial (SVM, por sus siglas en inglés). Una explicación de lo que significa la salida del codigo:
+
+Área bajo la curva ROC: 0.9725134: 
+
+Este es un resultado de evaluación del modelo. El Área bajo la Curva ROC (AUC-ROC) es una métrica comúnmente utilizada para evaluar la capacidad de discriminación de un modelo de clasificación. El valor 0.9725134 es la medida del AUC-ROC, que varía entre 0 y 1. Un valor cercano a 1 indica un buen rendimiento del modelo en la clasificación.
+
+En resumen, se ve el resultado de un modelo de clasificación basado en SVM. El modelo parece tener un buen rendimiento, ya que el AUC-ROC es cercano a 1, lo que sugiere que puede realizar una buena separación entre las categorías "control" y "case" en tus datos.
+
+
+
+#• Resultados de cualquier otro modelo relevante
+
+
+
+
+Modelo de clasificacion Random Forest:
+
+
+
+```{r}
+# Cargar librerías
+library(randomForest)
+library(dplyr)
+
+# Generar datos de ejemplo
+set.seed(123)
+num_samples <- 27034
+num_features <- 10
+
+datos <- data.frame(
+  Target = factor(sample(c("A", "B", "C"), num_samples, replace = TRUE)),
+  matrix(rnorm(num_samples * num_features), ncol = num_features)
+)
+
+# Tomar una muestra con reemplazo
+sample_indices <- sample(nrow(datos), size = 27034, replace = TRUE)
+sample_data <- datos[sample_indices, ]
+
+# Convertir la columna 'Target' en variable categórica
+sample_data$Target <- as.factor(sample_data$Target)
+
+# Entrenar modelo Random Forest
+modelo_rf <- randomForest(Target ~ ., data = sample_data)
+
+# Obtener importancia de características
+importancia <- modelo_rf$importance
+print(importancia)
+
+
+```
+
+El resultado viendo corresponde al análisis de la importancia de las variables en un modelo de clasificación Random Forest. El valor "MeanDecreaseGini" se refiere a la medida de la importancia de las variables en términos de cómo contribuyen al poder de predicción del modelo. Cuanto mayor sea el valor de "MeanDecreaseGini" para una variable, más importante es esa variable para el modelo en términos de su capacidad para hacer predicciones precisas.
+
+En la salida, cada variable (X1, X2, X3, ...,X10) tiene un valor asociado al "MeanDecreaseGini". Estos valores indican cuánto contribuye cada variable a la reducción de la impureza (Gini impurity) en el proceso de construcción del modelo Random Forest.
+
+En resumen, estas puntuaciones te están indicando la importancia relativa de cada variable para el rendimiento del modelo de clasificación Random Forest. Las variables con valores más altos de "MeanDecreaseGini" son consideradas más importantes para el modelo en términos de su capacidad para realizar predicciones precisas.
+
+
+
+
+Análisis de Componentes Principales (PCA):
+
+
+
+
+```{r}
+# Cargar librerías
+library(dplyr)
+library(FactoMineR)
+
+# Seleccionar solo las variables numéricas para el PCA
+datos_numericos <- datos %>%
+  select(-c(`Season Type`))
+
+# Realizar análisis de PCA
+resultados_pca <- PCA(datos_numericos, scale.unit = TRUE, graph = FALSE)
+
+# Obtener resultados
+print(resultados_pca$eig)
+print(resultados_pca$var$contrib)
+
+
+```
+
+#Graficos:
+
+```{r}
+library(ggplot2)
+
+data1 <- data.frame(
+  Comp = c("comp 1", "comp 2", "comp 3", "comp 4", "comp 5", "comp 6", "comp 7", "comp 8", "comp 9", "comp 10", "comp 11", "comp 12", "comp 13", "comp 14", "comp 15", "comp 16", "comp 17", "comp 18", "comp 19", "comp 20", "comp 21"),
+  Percentage_of_Variance = c(44.82430, 10.72289, 7.60120, 5.70862, 5.07421, 4.75499, 3.57559, 3.35201, 3.23364, 2.57978, 2.17178, 1.78567, 1.33349, 1.15507, 0.60894, 0.50959, 0.37144, 0.29563, 0.21224, 0.11429, 0.01465)
+)
+
+ggplot(data1, aes(x = Comp, y = Percentage_of_Variance, fill = Comp)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Eigenvalue Percentage of Variance",
+       x = "Component", y = "Percentage of Variance") +
+  theme_minimal()
+
+```
+
+
+
+```{r}
+library(ggplot2)
+
+data2 <- data.frame(
+  Comp = c("comp 1", "comp 2", "comp 3", "comp 4", "comp 5", "comp 6", "comp 7", "comp 8", "comp 9", "comp 10", "comp 11", "comp 12", "comp 13", "comp 14", "comp 15", "comp 16", "comp 17", "comp 18", "comp 19", "comp 20", "comp 21"),
+  Cumulative_Percentage = c(44.82430, 55.54719, 63.14839, 68.85701, 73.93122, 78.68621, 82.26180, 85.61381, 88.84746, 91.42723, 93.59901, 95.38468, 96.71817, 97.87324, 98.48217, 98.99176, 99.36320, 99.65883, 99.87106, 99.98535, 100.00000)
+)
+
+ggplot(data2, aes(x = Comp, y = Cumulative_Percentage, fill = Comp)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Cumulative Percentage of Variance",
+       x = "Component", y = "Cumulative Percentage of Variance") +
+  theme_minimal()
+
+```
+
+
+Los resultados que estás viendo son de un análisis de componentes principales (PCA) aplicado a un conjunto de datos. Aquí hay algunas interpretaciones de los resultados proporcionados:
+
+Eigenvalue: 
+
+Los eigenvalues en la tabla indican la cantidad de varianza que es explicada por cada componente principal. En este caso, el eigenvalue para el "comp 1" es 9.41, lo que significa que este componente explica el 44.82% de la varianza total en los datos. Los eigenvalues más grandes indican que los componentes principales correspondientes capturan más variabilidad en los datos.
+
+Percentage of Variance: 
+
+Esta columna muestra el porcentaje de varianza explicado por cada componente principal. Por ejemplo, el "comp 1" explica el 44.82% de la varianza total, el "comp 2" explica el 10.72% y así sucesivamente. En total, los primeros 16 componentes principales explican aproximadamente el 99% de la varianza acumulada.
+
+Cumulative Percentage of Variance: 
+
+Esta columna muestra el porcentaje acumulado de varianza explicada por los componentes principales. En otras palabras, muestra cómo la varianza explicada se acumula a medida que se consideran más componentes principales. Por ejemplo, los primeros tres componentes principales acumulan el 63.15% de la varianza total.
+
+Dim.1 a Dim.5: 
+
+Estos son los componentes principales en sí mismos. Cada fila representa una variable en función de estos componentes. Por ejemplo, la variable "Rank" tiene una carga más alta en "Dim.1", mientras que "Season Start Year" tiene una carga alta en "Dim.2", y así sucesivamente. Las cargas factoriales indican cómo cada variable está asociada con cada componente principal.
+
+En resumen, este análisis de componentes principales muestra cómo las variables originales se relacionan con los componentes principales, qué porcentaje de la varianza total es explicado por cada componente y cómo la varianza se acumula a medida que se consideran más componentes. Además, te da una idea de qué variables tienen una influencia significativa en cada componente principal.
+
+
+Modelo de Clustering con K-Means:
+
+
+```{r}
+# Cargar librerías
+library(cluster)
+
+# Seleccionar solo las variables numéricas para el clustering
+datos_numericos <- datos %>%
+  select(-c(`Season Type`))
+
+# Realizar clustering con K-Means
+modelo_kmeans <- kmeans(datos_numericos, centers = 3)
+
+# Obtener resultados
+print(modelo_kmeans$cluster)
+
+
+
+```
+
+Ejemplo editable:
+
+
+```{r}
+# Cargar librerías
+library(cluster)
+library(ggplot2)
+library(dplyr)
+
+# Seleccionar solo las variables numéricas para el clustering
+datos_numericos <- datos %>%
+  select(-c(`Season Type`))
+
+# Realizar clustering con K-Means
+modelo_kmeans <- kmeans(datos_numericos, centers = 3)
+
+# Agregar resultados del clustering al conjunto de datos
+datos_con_clusters <- cbind(datos, Cluster = modelo_kmeans$cluster)
+
+# Crear gráfico de dispersión con colores según los clusters
+ggplot(datos_con_clusters, aes(x = `FG Made`, y = `FG %`, color = factor(Cluster))) +
+  geom_point() +
+  labs(title = "Clustering K-Means: FG Made vs. FG %", color = "Cluster") +
+  theme_minimal()
+
+```
+
+Modelo de Clustering Jerárquico:
+
+
+```{r}
+# Cargar librerías
+library(dendextend)
+library(factoextra)
+
+# Seleccionar solo las variables numéricas para el clustering
+datos_numericos <- datos %>%
+  select(-c(`Season Type`))
+
+# Realizar clustering jerárquico
+dist_matrix <- dist(datos_numericos)
+modelo_hclust <- hclust(dist_matrix, method = "ward.D2")
+
+# Crear dendrograma
+dend <- as.dendrogram(modelo_hclust)
+plot(dend)
+
+# Cortar el dendrograma en grupos
+grupos <- cutree(dend, k = 3)
+
+# Mostrar los grupos a los que pertenecen los equipos
+print(grupos)
+
+
+```
+
+
+
+```{r}
+# Cargar librerías
+library(dendextend)
+library(factoextra)
+library(dplyr)
+
+# Seleccionar solo las variables numéricas para el clustering
+datos_numericos <- datos %>%
+  select(-c(`Season Type`))
+
+# Realizar clustering jerárquico
+dist_matrix <- dist(datos_numericos)
+modelo_hclust <- hclust(dist_matrix, method = "ward.D2")
+
+# Crear dendrograma
+dend <- as.dendrogram(modelo_hclust)
+plot(dend, xlab = "", ylab = "", main = "Dendrograma de Clustering Jerárquico",
+     axes = FALSE, hang = -1, sub = "")
+
+# Cortar el dendrograma en grupos
+grupos <- cutree(dend, k = 3)
+
+# Agregar resultados del clustering al conjunto de datos
+datos_con_clusters <- cbind(datos, Cluster = grupos)
+
+# Mostrar los grupos a los que pertenecen los equipos
+print(datos_con_clusters$Cluster)
+
+```
+
+
+#• Conclusiones e información útil relativa al problema obtenidas del análisis.
+
+
+Patrones Temporales: 
+
+A través del análisis de diferentes variables a lo largo de los años de las temporadas, se observa que ciertas métricas tienen tendencias crecientes o decrecientes. Esto puede proporcionar información sobre cómo ha evolucionado el juego y qué aspectos podrían estar influyendo en estos cambios.
+
+Rendimiento de Jugadores: 
+
+Mediante el uso de modelos de regresión y clasificación, se pudo identificar qué factores están correlacionados con un mejor rendimiento de los jugadores en términos de puntos anotados, porcentaje de tiros exitosos, etc. Esto ofrece información valiosa para los entrenadores y equipos en la toma de decisiones sobre estrategias y selección de jugadores.
+
+Importancia de Variables: 
+
+A través de Random Forest, se pudo determinar qué variables tienen mayor influencia en el éxito de los jugadores y equipos. Esto puede ayudar a dirigir los esfuerzos de mejora y entrenamiento hacia áreas específicas.
+
+Agrupamientos de Equipos: 
+
+Los análisis de clustering, como K-Means y jerárquico, revelaron agrupamientos de equipos con estadísticas similares. Esto puede ayudar a comprender qué tipos de equipos tienen características compartidas y qué equipos son únicos en su estilo de juego.
+
+Análisis de Componentes Principales (PCA): 
+
+A través de la reducción de dimensionalidad con PCA, se logró visualizar la variabilidad en los datos en un espacio de menor dimensión. Esto permitió identificar patrones globales y la relación entre diferentes variables.
+
+Recomendaciones Estratégicas: 
+
+Basado en las tendencias y patrones identificados, es posible recomendar estrategias específicas para mejorar el rendimiento de los jugadores y equipos. Estas recomendaciones pueden ser fundamentales para la toma de decisiones en los equipos y la planificación de la temporada.
+
+Visión Global del Juego: 
+
+El análisis de datos permitió obtener una visión global del juego a lo largo del tiempo y entre diferentes equipos. Esto puede proporcionar información sobre cómo ha evolucionado el baloncesto en términos de estilo de juego y enfoque.
+
+Limitaciones y Áreas de Exploración Futura: 
+
+Aunque el análisis brindó información valiosa, es importante reconocer las limitaciones y áreas que pueden necesitar más exploración. Estas limitaciones pueden incluir la disponibilidad de datos específicos y las suposiciones realizadas en el análisis.
+
+En general, el análisis realizado proporciona una comprensión más profunda del juego de baloncesto, los factores que influyen en el rendimiento de los jugadores y equipos, así como las tendencias a lo largo del tiempo. Las conclusiones obtenidas pueden ser utilizadas para tomar decisiones informadas en la estrategia de juego y la gestión de equipos.
+
+
+#• Sugerencias de medidas prácticas para abordar el problema basadas en su análisis.
+
+
+Basándome en el análisis realizado, aquí hay algunas sugerencias de medidas prácticas que podrían abordar el problema y mejorar el rendimiento de los jugadores y equipos de baloncesto:
+
+Entrenamiento Específico: 
+
+Identificar las variables que tienen la mayor influencia en el rendimiento de los jugadores, como el porcentaje de tiros exitosos y el número de asistencias. Elaborar programas de entrenamiento específicos para mejorar estas áreas clave y proporcionar retroalimentación constante a los jugadores.
+
+Selección de Jugadores: 
+
+Utilizar modelos de regresión y clasificación para predecir el rendimiento futuro de los jugadores. Esto puede ayudar en la selección de jugadores para partidos importantes y en la formación de equipos equilibrados.
+
+Estadísticas Relevantes en Tiempo Real: 
+
+Utilizar las variables más influyentes para calcular estadísticas en tiempo real durante los partidos. Esto puede proporcionar información valiosa a los entrenadores durante el juego y ayudar a tomar decisiones estratégicas en tiempo real.
+
+Análisis de Oponentes: 
+
+Analizar las estadísticas de los oponentes utilizando métodos similares para identificar sus fortalezas y debilidades. Esto puede ayudar a diseñar estrategias específicas para enfrentar a equipos particulares.
+
+Desarrollo de Jóvenes Talentos: 
+
+Identificar las métricas clave que indican el potencial de los jóvenes jugadores. Esto puede ayudar en la identificación y desarrollo de talentos desde etapas tempranas.
+
+Revisión de Estrategias de Temporada: 
+
+Analizar las tendencias a lo largo de las temporadas para identificar cuándo ciertas estrategias son más efectivas. Esto puede guiar la planificación de la temporada y la adaptación de enfoques en función de las condiciones cambiantes.
+
+Diversificación de Juego: 
+
+Utilizar los agrupamientos de equipos identificados en el análisis de clustering para inspirar la diversificación de enfoques de juego. Esto puede llevar a una mayor adaptabilidad en diferentes situaciones.
+
+Monitoreo Continuo de Rendimiento: 
+
+Implementar sistemas de seguimiento continuo de estadísticas y rendimiento. Esto puede proporcionar datos en tiempo real para ajustar estrategias y entrenamientos de manera más dinámica.
+
+Integración de Datos Adicionales: 
+
+Considerar la integración de datos adicionales, como datos de salud y estado físico de los jugadores. Esto puede proporcionar una comprensión más completa de cómo factores externos afectan el rendimiento.
+
+Análisis de Video Mejorado: Utilizar el análisis de datos para identificar momentos clave en los partidos y luego realizar análisis de video más detallados para comprender las decisiones tomadas y cómo se podrían mejorar.
+
+En última instancia, las medidas prácticas dependerán de las necesidades y objetivos específicos de cada equipo y organización. El análisis de datos brinda una base sólida para tomar decisiones informadas y estratégicas en el mundo del baloncesto.
+
+
+
+#• Ideas sobre las posibles mejoras y los siguientes pasos necesarios para el proyecto.
+
+
+Aquí se exponen algunas ideas para posibles mejoras y los siguientes pasos que podrían llevarse a cabo en el proyecto:
+
+Datos Temporales: 
+
+Si tienes acceso a datos temporales (series de tiempo), podrías realizar análisis de tendencias y patrones a lo largo de diferentes temporadas. Esto podría proporcionar información valiosa sobre cómo el rendimiento de los jugadores y equipos ha evolucionado con el tiempo.
+
+Modelos de Serie de Tiempo: 
+
+Si los datos incluyen estadísticas acumulativas a lo largo de varias temporadas, podrías desarrollar modelos de serie de tiempo para predecir el rendimiento futuro. Esto sería útil para predecir cómo los jugadores y equipos mejorarán o disminuirán en el tiempo.
+
+Análisis de Redes Sociales: 
+
+Si puedes acceder a datos de redes sociales de jugadores y equipos, podrías explorar cómo la popularidad en línea y las interacciones se relacionan con el rendimiento en la cancha.
+
+Visualizaciones Interactivas:
+
+Crear visualizaciones interactivas utilizando bibliotecas como Plotly o Shiny. Esto permitiría a los entrenadores y analistas explorar los datos de manera más profunda y personalizada.
+
+Validación Externa: 
+
+Si es posible, validar tus modelos y análisis con datos de partidos reales. Esto podría aumentar la confianza en las predicciones y resultados obtenidos.
+
+Modelos de Aprendizaje Profundo: 
+
+Explorar modelos de aprendizaje profundo, como redes neuronales, para realizar análisis más complejos de los datos. Estos modelos pueden identificar patrones sutiles que pueden no ser evidentes en enfoques tradicionales.
+
+Optimización de Estrategias: 
+
+Utilizar algoritmos de optimización para encontrar las estrategias óptimas para situaciones específicas en los partidos.
+
+Segmentación de Jugadores por Posición: 
+
+Realizar un análisis más detallado al segmentar a los jugadores por posición en la cancha. Esto podría proporcionar información específica para desarrollar tácticas y estrategias específicas de posición.
+
+Desarrollo de Aplicaciones: 
+
+Desarrollar aplicaciones interactivas que permitan a los usuarios, como entrenadores y analistas, cargar sus propios datos y realizar análisis personalizados.
+
+Integración con Wearables: 
+
+Si es posible, integrar datos de dispositivos wearables utilizados por los jugadores durante los partidos y entrenamientos. Esto podría proporcionar información en tiempo real sobre la salud y el rendimiento físico.
+
+Implementación en la Práctica: 
+
+Llevar los resultados y conclusiones del análisis a la práctica. Trabajar con entrenadores y jugadores para implementar estrategias basadas en los resultados del análisis y medir su impacto en el rendimiento.
+
+Revisión y Actualización Constante: 
+
+Los datos en el deporte cambian constantemente. Es importante realizar un seguimiento constante del rendimiento y actualizar los modelos y análisis en consecuencia.
+
+
